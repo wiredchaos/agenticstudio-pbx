@@ -1,39 +1,60 @@
-import { Hero } from './components/Hero'
-import { Portfolio } from './components/Portfolio'
-import { Awards } from './components/Awards'
-import { About } from './components/About'
-import { Services } from './components/Services'
-import { Team } from './components/Team'
-import { Contact } from './components/Contact'
-import { Footer } from './components/Footer'
+import { Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+import MarketingHome from "./pages/MarketingHome";
+import AuthPage from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
+import StudiosDirectory from "./pages/StudiosDirectory";
+import StudioPublic from "./pages/StudioPublic";
+import NotFound from "./pages/NotFound";
+
+import AppLayout from "./pages/app/AppLayout";
+import Dashboard from "./pages/app/Dashboard";
+import Praxis from "./pages/app/Praxis";
+import Scribe from "./pages/app/Scribe";
+import Architect from "./pages/app/Architect";
+import Egos from "./pages/app/Egos";
+import Archive from "./pages/app/Archive";
+import DNA from "./pages/app/DNA";
+import Distribution from "./pages/app/Distribution";
+import Settings from "./pages/app/Settings";
+import StudiosInApp from "./pages/app/StudiosInApp";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ overflow: 'visible' }}>
-      <main className="relative" role="main" style={{ overflow: 'visible' }}>
-        <section id="hero" aria-label="Hero section">
-          <Hero />
-        </section>
-        <section id="portfolio" aria-label="Portfolio section">
-          <Portfolio />
-        </section>
-        <section id="awards" aria-label="Awards section">
-          <Awards />
-        </section>
-        <section id="about" aria-label="About section">
-          <About />
-        </section>
-        <section id="services" aria-label="Services section">
-          <Services />
-        </section>
-        <section id="team" aria-label="Team section" style={{ overflow: 'visible', height: 'auto', minHeight: '0', maxHeight: 'none' }}>
-          <Team />
-        </section>
-        <section id="contact" aria-label="Contact section">
-          <Contact />
-        </section>
-      </main>
-      <Footer />
-    </div>
-  )
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster theme="dark" position="top-right" />
+        <Routes>
+          <Route path="/" element={<MarketingHome />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/onboarding" element={
+            <ProtectedRoute requireStudio={false}><Onboarding /></ProtectedRoute>
+          } />
+          <Route path="/studios" element={<StudiosDirectory />} />
+          <Route path="/studios/:slug" element={<StudioPublic />} />
+
+          <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="agents/nexus" element={<Dashboard />} />
+            <Route path="agents/praxis" element={<Praxis />} />
+            <Route path="agents/scribe" element={<Scribe />} />
+            <Route path="agents/architect" element={<Architect />} />
+            <Route path="agents/egos" element={<Egos />} />
+            <Route path="archive" element={<Archive />} />
+            <Route path="dna" element={<DNA />} />
+            <Route path="distribution" element={<Distribution />} />
+            <Route path="studios" element={<StudiosInApp />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </AuthProvider>
+  );
 }
