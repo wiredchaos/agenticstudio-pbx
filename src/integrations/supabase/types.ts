@@ -285,7 +285,7 @@ export type Database = {
           display_name: string | null
           id: string
           updated_at: string
-          user_id: string
+          user_id: string | null
           web3_wallet: string | null
         }
         Insert: {
@@ -295,7 +295,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           web3_wallet?: string | null
         }
         Update: {
@@ -305,7 +305,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           web3_wallet?: string | null
         }
         Relationships: []
