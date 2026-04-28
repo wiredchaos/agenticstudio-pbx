@@ -1,32 +1,35 @@
 import { useEffect } from "react";
-import { MarketingHero } from "@/components/marketing/MarketingHero";
-import { StudiosStrip } from "@/components/marketing/StudiosStrip";
-import { FiveAgents } from "@/components/marketing/FiveAgents";
-import { Manifesto } from "@/components/marketing/Manifesto";
-import { Capabilities } from "@/components/marketing/Capabilities";
-import { Founders } from "@/components/marketing/Founders";
-import { OpenStudio } from "@/components/marketing/OpenStudio";
-import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import { Navbar } from "@/components/mindloop/Navbar";
+import { Hero } from "@/components/mindloop/Hero";
+import { SearchChanged } from "@/components/mindloop/SearchChanged";
+import { Mission } from "@/components/mindloop/Mission";
+import { Solution } from "@/components/mindloop/Solution";
+import { DevinReel } from "@/components/mindloop/DevinReel";
+import { CTA } from "@/components/mindloop/CTA";
+import { Footer } from "@/components/mindloop/Footer";
 
 export default function MarketingHome() {
   useEffect(() => {
-    document.title = "Agentic Studios — The studio runs itself. So you can direct.";
+    document.title = "Mindloop — Get Inspired with Us";
     const meta = document.querySelector('meta[name="description"]');
-    meta?.setAttribute("content", "Agentic Studios — a platform of director-owned AI studios. Five named agents handle the work no director wants to do. Built on open infrastructure.");
+    meta?.setAttribute(
+      "content",
+      "Mindloop — a calmer, deeper feed for writers and readers. Meaningful updates, news around technology, and a shared journey toward depth and direction."
+    );
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="mindloop min-h-screen">
+      <Navbar />
       <main>
-        <MarketingHero />
-        <StudiosStrip />
-        <FiveAgents />
-        <Manifesto />
-        <Capabilities />
-        <Founders />
-        <OpenStudio />
+        <Hero />
+        <SearchChanged />
+        <Mission />
+        <Solution />
+        <DevinReel />
+        <CTA />
       </main>
-      <MarketingFooter />
+      <Footer />
     </div>
   );
 }
