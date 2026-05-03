@@ -82,7 +82,7 @@ export function DevinReel() {
       </div>
       <motion.div {...fadeUp(0.2)} ref={scrollRef} className="reel-scroll flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 px-6 md:-mx-12 md:px-12">
         {VIDEOS.map((v) => (
-          <VideoCard key={v.id} id={v.id} title={v.title} />
+          <VideoCard key={v.id} id={v.id} title={v.title} role={v.role} />
         ))}
       </motion.div>
     </section>
