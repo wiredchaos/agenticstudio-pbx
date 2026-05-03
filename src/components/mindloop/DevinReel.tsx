@@ -45,7 +45,8 @@ function VideoCard({ id, title, role }: { id: string; title: string; role: strin
           </>
         )}
       </div>
-      <p className="mt-3 text-sm text-muted-foreground tracking-wide">{title}</p>
+      <p className="mt-3 text-sm text-foreground tracking-wide">{title}</p>
+      <p className="mt-1 text-xs uppercase tracking-[2px] text-muted-foreground">{role}</p>
     </div>
   );
 }
