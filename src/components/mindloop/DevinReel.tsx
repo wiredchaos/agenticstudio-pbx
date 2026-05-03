@@ -3,18 +3,21 @@ import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { fadeUp } from "@/lib/animations";
 
-// TODO: Replace these placeholder IDs with Devin's actual MonkeY Teer YouTube video IDs.
-// Source channel: https://youtube.com/@monkeyteer
+// Source: youtube.com/@monkeyteer
 const VIDEOS = [
-  { id: "aqz-KE-bpKQ", title: "Big Buck Bunny" },
-  { id: "ScMzIvxBSi4", title: "Beach Walk" },
-  { id: "LXb3EKWsInQ", title: "Costa Rica" },
-  { id: "8lsB-P8nGSM", title: "Forest Path" },
-  { id: "Dx5qFachd3A", title: "City Lights" },
-  { id: "9bZkp7q19f0", title: "Stage Performance" },
+  { id: "4sn-nB52bGE", title: "Once Upon a Time in America", role: "Production / Cast (Monkey Teer)" },
+  { id: "OH8ajVijDM8", title: "Bizzarro e Fantastico", role: "Monkey Teer Production" },
+  { id: "YVOVWfuJ68Y", title: "L'imposteur du 16 Rue Ravignan", role: "Monkey Teer Production" },
+  { id: "0iiwUgv2U0o", title: "Off-Key", role: "Monkey Teer Production" },
+  { id: "ocklAzBhZQM", title: "Parenthesis", role: "Cinematographer" },
+  { id: "a5nX0nCCIes", title: "Him — Batman Thriller Short", role: "Monkey Teer Entertainment" },
+  { id: "CiOmC95OnRA", title: "Him & Her", role: "Monkey Teer Entertainment" },
+  { id: "V6RIdwkjE_c", title: "Son of Sheba", role: "Executive Producer" },
+  { id: "okf0wKINsvM", title: "MonkeY Teer — Untitled", role: "Monkey Teer Production" },
+  { id: "6L9esv2doHw", title: "MonkeY Teer — Untitled", role: "Monkey Teer Production" },
 ];
 
-function VideoCard({ id, title }: { id: string; title: string }) {
+function VideoCard({ id, title, role }: { id: string; title: string; role: string }) {
   const [playing, setPlaying] = useState(false);
   return (
     <div className="snap-start shrink-0 w-[85vw] sm:w-[480px] md:w-[560px]">
