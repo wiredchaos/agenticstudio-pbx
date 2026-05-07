@@ -103,7 +103,7 @@ export function PanoramaBackground({ className = "" }: { className?: string }) {
 
         const uniformBuf = device.createBuffer({
           size: 32, // vec2 + vec2 + 4 floats = 32
-          usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+          usage: 0x40 | 0x08, // UNIFORM | COPY_DST
         });
         const bindGroup = device.createBindGroup({
           layout: pipeline.getBindGroupLayout(0),
