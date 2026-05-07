@@ -56,10 +56,13 @@
   --accent-foreground: #fafafa;
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
-  --border: #27272a;
+  --border: #1a1a1a;
   --input: #1a1a1a;
   --ring: #71717a;
+  --gold: 45 56% 51%;
 }
+
+:root { --gold: 45 56% 51%; }
 
 
 @theme inline {
