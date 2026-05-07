@@ -1,33 +1,34 @@
 import { useEffect } from "react";
-import { Navbar } from "@/components/mindloop/Navbar";
-import { Hero } from "@/components/mindloop/Hero";
-import { SearchChanged } from "@/components/mindloop/SearchChanged";
-import { Mission } from "@/components/mindloop/Mission";
-import { Solution } from "@/components/mindloop/Solution";
-import { DevinReel } from "@/components/mindloop/DevinReel";
-import { CTA } from "@/components/mindloop/CTA";
-import { Footer } from "@/components/mindloop/Footer";
+import { Navbar } from "@/components/agentic-landing/Navbar";
+import { Hero } from "@/components/agentic-landing/Hero";
+import { AgentsGrid } from "@/components/agentic-landing/AgentsGrid";
+import { PraxisDemo } from "@/components/agentic-landing/PraxisDemo";
+import { Process } from "@/components/agentic-landing/Process";
+import { RoutingLayer } from "@/components/agentic-landing/RoutingLayer";
+import { EarlyAccess } from "@/components/agentic-landing/EarlyAccess";
+import { Footer } from "@/components/agentic-landing/Footer";
 
 export default function MarketingHome() {
   useEffect(() => {
-    document.title = "Mindloop — Get Inspired with Us";
+    document.title = "Agentic Studios — The AI Production Suite";
     const meta = document.querySelector('meta[name="description"]');
     meta?.setAttribute(
       "content",
-      "Mindloop — a calmer, deeper feed for writers and readers. Meaningful updates, news around technology, and a shared journey toward depth and direction."
+      "Agentic Studios — five AI agents, one studio. Built for directors who think in images. Powered by Monkey Teer Studios."
     );
+    document.documentElement.classList.add("dark");
   }, []);
 
   return (
-    <div className="mindloop min-h-screen">
+    <div className="dark min-h-screen bg-background text-foreground">
       <Navbar />
       <main>
         <Hero />
-        <SearchChanged />
-        <Mission />
-        <Solution />
-        <DevinReel />
-        <CTA />
+        <AgentsGrid />
+        <PraxisDemo />
+        <Process />
+        <RoutingLayer />
+        <EarlyAccess />
       </main>
       <Footer />
     </div>

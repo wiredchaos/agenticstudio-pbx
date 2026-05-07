@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Instrument+Serif:ital@0;1&display=swap');
+
+.font-serif { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,10 +58,13 @@
   --accent-foreground: #fafafa;
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
-  --border: #27272a;
+  --border: #1a1a1a;
   --input: #1a1a1a;
   --ring: #71717a;
+  --gold: 45 56% 51%;
 }
+
+:root { --gold: 45 56% 51%; }
 
 
 @theme inline {
