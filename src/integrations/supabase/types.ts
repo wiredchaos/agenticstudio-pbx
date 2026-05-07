@@ -358,6 +358,27 @@ export type Database = {
           },
         ]
       }
+      early_access: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string
+        }
+        Relationships: []
+      }
       model_routes: {
         Row: {
           agent_slug: string
@@ -399,6 +420,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      praxis_demo_runs: {
+        Row: {
+          created_at: string
+          id: string
+          ip_hash: string
+          output: string | null
+          prompt: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_hash: string
+          output?: string | null
+          prompt: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_hash?: string
+          output?: string | null
+          prompt?: string
+        }
+        Relationships: []
       }
       projects: {
         Row: {
