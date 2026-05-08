@@ -1,15 +1,9 @@
 import { Link } from "react-router-dom";
-import { PanoramaBackground } from "./panorama/PanoramaBackground";
-import { FilmStripRail } from "./FilmStripRail";
 
 export function Hero() {
   return (
-    <section className="relative isolate min-h-screen overflow-hidden bg-background text-foreground">
-      <PanoramaBackground />
-      <FilmStripRail side="left" />
-      <FilmStripRail side="right" />
-
-      <div className="relative z-20 mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 text-center">
+    <section className="pointer-events-none relative isolate flex min-h-screen items-center justify-center text-foreground">
+      <div className="pointer-events-auto relative z-20 mx-auto flex max-w-5xl flex-col items-center justify-center px-6 text-center">
         <p
           className="mb-8 text-[10px] uppercase tracking-[0.4em] md:text-xs"
           style={{ color: "hsl(var(--gold))" }}
@@ -26,7 +20,7 @@ export function Hero() {
         </h1>
 
         <p className="mt-8 max-w-xl text-base text-muted-foreground md:text-lg">
-          Five agents. One studio. Built for directors who think in images.
+          Watch the work. Then enter the studio.
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row">

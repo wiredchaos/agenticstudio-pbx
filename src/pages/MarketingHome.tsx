@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Navbar } from "@/components/agentic-landing/Navbar";
 import { Hero } from "@/components/agentic-landing/Hero";
+import { ReelSection } from "@/components/agentic-landing/reel/ReelSection";
 import { AgentsGrid } from "@/components/agentic-landing/AgentsGrid";
 import { PraxisDemo } from "@/components/agentic-landing/PraxisDemo";
 import { Process } from "@/components/agentic-landing/Process";
@@ -23,7 +24,10 @@ export default function MarketingHome() {
     <div className="dark min-h-screen bg-background text-foreground">
       <Navbar />
       <main>
-        <Hero />
+        <ReelSection />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
+          <Hero />
+        </div>
         <AgentsGrid />
         <PraxisDemo />
         <Process />
