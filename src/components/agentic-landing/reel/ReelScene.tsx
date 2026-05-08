@@ -230,7 +230,7 @@ export function ReelScene({
       dpr={[1, 1.75]}
       camera={{ fov: 60, near: 0.1, far: 1000, position: [0, 0, 0] }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
-      style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh" }}
+      style={{ position: "fixed", inset: 0, width: "100vw", height: "100vh", touchAction: "pan-y" }}
     >
       <Skybox era={era} />
       <ambientLight intensity={0.6} />
