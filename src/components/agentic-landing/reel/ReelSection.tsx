@@ -96,15 +96,14 @@ export function ReelSection() {
         {/* Scroll-owner sections (one per device) — invisible but drives scroll */}
         <div className="absolute inset-0 z-20 pointer-events-none">
           <HeroPanel />
-          {DEVICES.map((d, i) => {
-              <div
-                key={d.id}
-                className="flex h-screen items-center justify-end px-8 md:px-20"
-              >
-                <DeviceCaption device={d} index={i} scroll={scroll} total={DEVICES.length + 2} />
-              </div>
-            );
-          })}
+          {DEVICES.map((d, i) => (
+            <div
+              key={d.id}
+              className="flex h-screen items-center justify-end px-8 md:px-20"
+            >
+              <DeviceCaption device={d} index={i} scroll={scroll} total={DEVICES.length + 2} />
+            </div>
+          ))}
           {/* Outro */}
           <div className="flex h-screen items-center justify-center">
             <div className="pointer-events-auto text-center">
