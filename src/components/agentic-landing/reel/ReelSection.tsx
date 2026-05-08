@@ -200,3 +200,28 @@ function VideoModal({ open, onClose }: { open: Device | null; onClose: () => voi
     </Dialog>
   );
 }
+
+function HeroPanel() {
+  return (
+    <div className="flex h-screen flex-col items-center justify-center px-6 text-center">
+      <div className="pointer-events-auto">
+        <p
+          className="mb-8 text-[10px] uppercase tracking-[0.4em] md:text-xs"
+          style={{ color: "hsl(var(--gold))" }}
+        >
+          Monkey Teer Studios · Powered by Agentic Studios
+        </p>
+        <h1 className="font-serif text-5xl leading-[0.95] md:text-7xl lg:text-8xl">
+          The AI{" "}
+          <em className="italic font-serif" style={{ color: "hsl(var(--gold))" }}>
+            Production
+          </em>{" "}
+          Suite.
+        </h1>
+        <p className="mt-8 max-w-xl text-base text-muted-foreground md:text-lg mx-auto">
+          Watch the work. Then enter the studio.
+        </p>
+      </div>
+    </div>
+  );
+}
