@@ -1,69 +1,55 @@
-## What's wrong now
+## Problem
 
-The Agentic Studios landing kept the procedural panorama background but **dropped all of Devin Teer's MonkeY Teer YouTube reel** (the original `DevinReel.tsx` content with 10 video IDs). It also never built the **scroll-driven 3D environment** described in the Claude Opus screenshots — a curved camera track flying through floating "devices" (one per video), each owned by a DOM section.
+Right now each device plane is rotated with a fixed yaw (±0.45 rad), so as the camera flies past on the S‑curve, most of the time the user only sees the device edge‑on. There is also no in‑world title — the video name only appears as an HTML caption to the side.
 
-## What we'll build
+## Goals
 
-A single cohesive 3D scroll experience that **uses every MonkeY Teer YouTube video as a floating cinematic device** inside the existing WebGPU/WebGL panorama world.
+1. Each device should rotate to **face the camera** as the camera approaches it, so the YouTube thumbnail is fully readable at the "hero" moment of its scroll segment.
+2. Add **3D typography in the scene** that displays the current video's title, animated in/out as that device's segment becomes active.
 
-### Structure (page = `~700vh` tall, fixed canvas + scrolling DOM)
+## Plan
 
-```text
-0–100vh    Hero        equirectangular panorama, gold streaks, "The AI Production Suite"
-100–600vh  Reel Track  scroll fires camera along curved spline through 10 floating
-                       devices (one per Devin Teer video) — each device renders the
-                       YouTube thumbnail as a texture, glowing gold edge, slight
-                       tilt + parallax. Active device snaps center, plays on click
-                       in a modal (YouTube iframe).
-600–700vh  Outro       camera pulls back, all 10 devices visible in formation,
-                       MonkeY Teer credit + "Enter the Studio" CTA
-Below      DOM         AgentsGrid → PraxisDemo → Process → RoutingLayer →
-                       EarlyAccess → Footer (unchanged)
-```
+### 1. Devices face forward (`ReelScene.tsx`)
 
-### New 3D component: `src/components/agentic-landing/reel/ReelScene.tsx`
+- Replace the static `rotation` prop on `<DeviceCard>` with a billboard‑style behavior driven by scroll proximity:
+  - In `DeviceCard`, accept the device's world position and a `scrollRef` + its segment center `t` value.
+  - Each frame, compute `proximity = 1 - clamp(|scroll - center| * 6, 0, 1)`.
+  - Compute the "facing" rotation by `lookAt(camera.position)` into a temp object, then `slerp` between the resting yaw (the current ±0.45 angled pose, looks cinematic from afar) and the camera‑facing pose using `proximity` as the weight.
+  - This means: far away → angled / cinematic; near its hero moment → squarely facing the camera so the thumbnail is fully visible.
+- Also bump device scale slightly (1.0 → 1.15) at the hero moment via the same `proximity` weight, so the active card "presents" itself.
+- Keep the gentle float/sway, but reduce its amplitude when `proximity` is high so the active card is steady and readable.
 
-- React Three Fiber (`three@0.160`, `@react-three/fiber@^8.18`, `@react-three/drei@^9.122` — already-allowed pinned versions).
-- WebGPU detection → uses Three's `WebGPURenderer` when available, otherwise WebGL2 (Three handles fallback).
-- Inverted `SphereGeometry` (radius 500) skybox with a procedural shader material reusing the existing `shaders.ts` panorama (ported to a `ShaderMaterial`) so the gold-streak look stays consistent.
-- 10 `<Device>` meshes (rounded plane ~1.6:1 ratio, beveled border) positioned along a `THREE.CatmullRomCurve3` spline. Each loads `https://i.ytimg.com/vi/{id}/hqdefault.jpg` as a `TextureLoader` texture mapped to the screen, with a thin gold emissive frame.
-- Camera animated by scroll: `t = scrollY / (pageHeight - vh)` clamped 0..1; position = `curve.getPointAt(t)`, lookAt = `curve.getPointAt(t + 0.02)`. Smoothed via `lerp` per frame.
-- Mouse parallax: small additive yaw/pitch on camera (±3°).
-- Hue drift: panorama shader gets a `uEra` uniform (0→1→2 dawn→dusk→vapor) tied to scroll.
-- Idle/hidden tab pauses the render loop; `dpr` capped at 1.75; `prefers-reduced-motion` falls back to a static grid of thumbnails.
+### 2. 3D typography for the active title
 
-### New: `src/components/agentic-landing/reel/devices.ts`
+- Add `troika-three-text` (already pulled in by `@react-three/drei`'s `<Text>` helper) via drei's `<Text>` component — no new dependency needed.
+- New `<DeviceTitle3D>` child inside each `<DeviceCard>`:
+  - Renders the device title as 3D text positioned just above the card (`y = +1.4`), using the existing serif feel (load the same Instrument Serif woff/ttf used on the page, falling back to drei's default if unavailable).
+  - Color: `#c9a53a` (gold token), `outlineColor` black for contrast over the panorama.
+  - Opacity & scale driven by the same `proximity` value: invisible when far, fades up + scales from 0.6 → 1.0 as the user reaches that device's segment.
+  - Subtitle line below it (smaller, white, 0.5x size) shows `device.role`.
+- Because it's parented to the card group, it inherits the billboard rotation, so the title turns to face the camera together with the device.
 
-Exports the 10 MonkeY Teer videos copied verbatim from the existing `src/components/mindloop/DevinReel.tsx` (`4sn-nB52bGE`, `OH8ajVijDM8`, `YVOVWfuJ68Y`, `0iiwUgv2U0o`, `ocklAzBhZQM`, `a5nX0nCCIes`, `CiOmC95OnRA`, `V6RIdwkjE_c`, `okf0wKINsvM`, `6L9esv2doHw`) with `title` and `role`.
+### 3. Scrolling title "marquee" between segments (optional secondary effect)
 
-### New: `src/components/agentic-landing/reel/ReelSection.tsx`
+- Add a single `<GlobalScrollTitle>` mesh in `ReelScene` that always sits ~6 units in front of the camera using `useFrame` (camera‑relative offset).
+- Its text is the title of whichever device segment is currently closest to `scrollRef.current`.
+- It crossfades (opacity tween) when the active index changes, giving a continuous on‑screen typographic "ticker" while flying between devices, even before any single card is fully facing.
 
-- Wraps `ReelScene` in a `position: fixed; inset: 0; z-index: 0` container.
-- Renders 10 scroll "owner" sections (one per device), each `100vh`, with the device's title/role/credit overlaid as text on the right column. The text fades in as that device's `t` window is centered.
-- Click on the device (raycast hit in R3F) or the overlay title → opens a YouTube iframe modal (reused dialog from shadcn).
+### 4. Caption cleanup (`ReelSection.tsx`)
 
-### Hero update
+- The HTML `DeviceCaption` is now redundant with in‑scene 3D text — remove it (or keep only the `01 ·` index number, smaller, as an accessibility/SEO fallback).
+- Keep the bottom "Scroll to fly the reel · Click a device to play" hint and the top filmmaker line unchanged.
 
-`Hero.tsx` becomes section 1 of the reel. Subtitle changes to **"Watch the work. Then enter the studio."** CTAs remain `Get Early Access` + `Browse Studios`. The "Drag to orbit · Scroll to explore" hint stays.
+### 5. Reduced‑motion fallback
 
-### MarketingHome update
-
-Insert `<ReelSection />` between `<Hero />` and `<AgentsGrid />`. Remove the standalone `<PanoramaBackground />` from `Hero` because `ReelSection` now owns the global fixed canvas (Hero just becomes a transparent overlay over it).
-
-### Cleanup
-
-- Delete unused `src/components/mindloop/*` files (Hero, CTA, Footer, Logo, Mission, Navbar, SearchChanged, Solution, DevinReel) — Mindloop is fully retired.
-- Drop `@fontsource` mindloop-only imports if any (check; Instrument Serif / Inter stay).
-
-### Memory
-
-Update `mem://index.md` Core to note: "Landing reel = fixed R3F scene, scroll-driven curved camera through 10 MonkeY Teer YouTube devices, panorama skybox, click-to-play modal." Mark `mindloop-landing` memory removed.
+- Unchanged: still renders the static gallery grid; titles already shown there.
 
 ## Out of scope
 
-No backend changes. No new tables / edge functions. `/app/*`, `/auth`, `/studios` untouched.
+- No changes to backend, routing, agents grid, or any `/app/*` code.
+- No new npm packages — `<Text>` ships with `@react-three/drei` already installed.
 
-## Risk notes
+## Files touched
 
-- WebGPU on Three is still experimental; fallback to standard WebGL2 renderer is the default path — WebGPU is opportunistic only.
-- YouTube thumbnails are CORS-safe for `TextureLoader` from `i.ytimg.com` (tested pattern). If a thumbnail 404s we fall back to `mqdefault.jpg`.
+- `src/components/agentic-landing/reel/ReelScene.tsx` — billboard logic, 3D `<Text>` per card, optional global scroll title.
+- `src/components/agentic-landing/reel/ReelSection.tsx` — remove/slim `DeviceCaption`.
