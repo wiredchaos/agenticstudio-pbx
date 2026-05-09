@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { DEVICES, thumb, type Device } from "./devices";
 
@@ -8,7 +9,7 @@ const PANORAMA_FRAG = /* glsl */ `
 precision highp float;
 varying vec3 vWorldDir;
 uniform float uTime;
-uniform float uEra; // 0..2  dawn -> dusk -> vapor
+uniform float uEra;
 
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float noise(vec2 p){
@@ -39,8 +40,6 @@ void main(){
 
   vec3 bg = vec3(.012,.010,.018) + n1*0.05 + n2*0.025;
   vec3 col = bg + era * streak * 0.32;
-
-  // soft horizon glow
   col += era * 0.04 * (1.0 - abs(sv-.5)*1.6);
 
   gl_FragColor = vec4(col, 1.0);
@@ -81,17 +80,32 @@ function Skybox({ era }: { era: React.MutableRefObject<number> }) {
 function DeviceCard({
   device,
   position,
-  rotation,
+  restYaw,
+  segmentCenter,
+  scrollRef,
   onOpen,
 }: {
   device: Device;
   position: [number, number, number];
-  rotation: [number, number, number];
+  restYaw: number;
+  segmentCenter: number;
+  scrollRef: React.MutableRefObject<number>;
   onOpen: (d: Device) => void;
 }) {
   const tex = useLoader(THREE.TextureLoader, thumb(device.id));
   const ref = useRef<THREE.Group>(null!);
+  const titleRef = useRef<any>(null);
+  const subtitleRef = useRef<any>(null);
+  const glowMatRef = useRef<THREE.MeshBasicMaterial>(null!);
   const [hover, setHover] = useState(false);
+  const { camera } = useThree();
+
+  const tmpObj = useMemo(() => new THREE.Object3D(), []);
+  const restQuat = useMemo(
+    () => new THREE.Quaternion().setFromEuler(new THREE.Euler(0, restYaw, 0)),
+    [restYaw]
+  );
+  const faceQuat = useMemo(() => new THREE.Quaternion(), []);
 
   useEffect(() => {
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -100,17 +114,43 @@ function DeviceCard({
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
-    // gentle float
     const t = clock.elapsedTime;
-    ref.current.position.y = position[1] + Math.sin(t * 0.6 + position[0]) * 0.08;
-    ref.current.rotation.z = rotation[2] + Math.sin(t * 0.4 + position[2]) * 0.02;
+
+    // proximity 0..1 — peaks when scroll is at this device's segment center
+    const dist = Math.abs(scrollRef.current - segmentCenter);
+    const proximity = Math.max(0, 1 - dist * 6);
+
+    // billboard: blend rest yaw -> facing camera by proximity
+    tmpObj.position.set(position[0], position[1], position[2]);
+    tmpObj.lookAt(camera.position);
+    faceQuat.copy(tmpObj.quaternion);
+    ref.current.quaternion.slerpQuaternions(restQuat, faceQuat, proximity);
+
+    // float (damped near hero)
+    const calm = 1 - proximity * 0.8;
+    ref.current.position.y = position[1] + Math.sin(t * 0.6 + position[0]) * 0.08 * calm;
+
+    // scale up at hero moment
+    const s = 1 + proximity * 0.18 + (hover ? 0.04 : 0);
+    ref.current.scale.setScalar(s);
+
+    // title fade
+    if (titleRef.current) {
+      titleRef.current.fillOpacity = proximity;
+      titleRef.current.outlineOpacity = proximity * 0.9;
+    }
+    if (subtitleRef.current) {
+      subtitleRef.current.fillOpacity = proximity * 0.85;
+    }
+    if (glowMatRef.current) {
+      glowMatRef.current.opacity = 0.08 + proximity * 0.22 + (hover ? 0.08 : 0);
+    }
   });
 
   return (
     <group
       ref={ref}
       position={position}
-      rotation={rotation}
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
@@ -128,18 +168,47 @@ function DeviceCard({
       {/* gold frame */}
       <mesh position={[0, 0, -0.02]}>
         <planeGeometry args={[3.4, 2.05]} />
-        <meshBasicMaterial color={hover ? "#e8c66a" : "#c9a53a"} transparent opacity={0.85} />
+        <meshBasicMaterial color={hover ? "#e8c66a" : "#c9a53a"} transparent opacity={0.9} />
       </mesh>
       {/* screen */}
       <mesh>
         <planeGeometry args={[3.2, 1.85]} />
         <meshBasicMaterial map={tex} toneMapped={false} />
       </mesh>
-      {/* subtle glow plane behind */}
+      {/* glow */}
       <mesh position={[0, 0, -0.05]}>
         <planeGeometry args={[3.8, 2.4]} />
-        <meshBasicMaterial color="#c9a53a" transparent opacity={hover ? 0.25 : 0.1} />
+        <meshBasicMaterial ref={glowMatRef} color="#c9a53a" transparent opacity={0.1} />
       </mesh>
+      {/* 3D title above the card */}
+      <Text
+        ref={titleRef as any}
+        position={[0, 1.55, 0.01]}
+        fontSize={0.42}
+        color="#c9a53a"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.012}
+        outlineColor="#000000"
+        maxWidth={6}
+        textAlign="center"
+        fillOpacity={0}
+        outlineOpacity={0}
+      >
+        {device.title}
+      </Text>
+      <Text
+        ref={subtitleRef as any}
+        position={[0, 1.18, 0.01]}
+        fontSize={0.16}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.18}
+        fillOpacity={0}
+      >
+        {device.role.toUpperCase()}
+      </Text>
     </group>
   );
 }
@@ -163,7 +232,6 @@ function ScrollRig({
   useFrame(() => {
     const t = Math.min(0.999, Math.max(0, scroll.current));
     curve.getPointAt(t, tmpPos);
-    // mouse parallax
     tmpPos.x += mouse.current.x * 0.5;
     tmpPos.y += mouse.current.y * 0.3;
     camera.position.lerp(tmpPos, 0.08);
@@ -172,10 +240,68 @@ function ScrollRig({
     curve.getPointAt(lookT, target);
     camera.lookAt(target);
 
-    // era 0..2 across the scroll
     era.current = t * 2.0;
   });
   return null;
+}
+
+/* -------------------- Camera-locked active title (HUD) -------------------- */
+function ActiveTitleHUD({
+  scrollRef,
+  segments,
+}: {
+  scrollRef: React.MutableRefObject<number>;
+  segments: { title: string; center: number }[];
+}) {
+  const { camera } = useThree();
+  const grpRef = useRef<THREE.Group>(null!);
+  const textRef = useRef<any>(null);
+  const [active, setActive] = useState(0);
+  const fade = useRef(0);
+
+  useFrame(() => {
+    if (!grpRef.current) return;
+    // place 6 units in front of camera
+    const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+    grpRef.current.position
+      .copy(camera.position)
+      .add(fwd.multiplyScalar(6))
+      .add(new THREE.Vector3(0, -1.6, 0));
+    grpRef.current.quaternion.copy(camera.quaternion);
+
+    // find nearest segment
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < segments.length; i++) {
+      const d = Math.abs(scrollRef.current - segments[i].center);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    if (best !== active) setActive(best);
+
+    // fade in/out as it moves between segments — strongest near a segment center
+    const target = Math.max(0, 1 - bestD * 12);
+    fade.current += (target - fade.current) * 0.08;
+    if (textRef.current) textRef.current.fillOpacity = fade.current * 0.65;
+  });
+
+  return (
+    <group ref={grpRef}>
+      <Text
+        ref={textRef as any}
+        fontSize={0.22}
+        color="#c9a53a"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.25}
+        fillOpacity={0}
+      >
+        {segments[active]?.title.toUpperCase() ?? ""}
+      </Text>
+    </group>
+  );
 }
 
 /* -------------------- Public scene -------------------- */
@@ -198,31 +324,30 @@ export function ReelScene({
     return () => window.removeEventListener("pointermove", onMove);
   }, []);
 
-  // Build curved spline through 10 device positions
-  const { curve, devicePositions } = useMemo(() => {
+  const { curve, devicePositions, segments } = useMemo(() => {
     const pts: THREE.Vector3[] = [];
-    const devPts: { pos: [number, number, number]; rot: [number, number, number] }[] = [];
-    // Start point (hero)
+    const devPts: { pos: [number, number, number]; restYaw: number; center: number }[] = [];
     pts.push(new THREE.Vector3(0, 0, 0));
 
+    const total = DEVICES.length + 2; // hero + outro
     DEVICES.forEach((_, i) => {
-      // arrange devices along a winding S-curve, alternating sides
       const z = -8 - i * 7;
       const x = Math.sin(i * 0.9) * 4.5 + (i % 2 === 0 ? -1 : 1) * 0.6;
       const y = Math.cos(i * 0.7) * 1.2;
       const camOffsetX = i % 2 === 0 ? x + 4.5 : x - 4.5;
       const camOffsetY = y + 0.4;
       pts.push(new THREE.Vector3(camOffsetX, camOffsetY, z + 4));
-      const yaw = i % 2 === 0 ? -0.45 : 0.45;
-      devPts.push({ pos: [x, y, z], rot: [0, yaw, 0] });
+      const restYaw = i % 2 === 0 ? -0.45 : 0.45;
+      const center = (i + 1) / (total - 1);
+      devPts.push({ pos: [x, y, z], restYaw, center });
     });
 
-    // Outro: pull back
     pts.push(new THREE.Vector3(0, 6, -8 - DEVICES.length * 7 + 30));
     pts.push(new THREE.Vector3(0, 10, -8 - DEVICES.length * 7 + 60));
 
     const c = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.5);
-    return { curve: c, devicePositions: devPts };
+    const segs = devPts.map((d, i) => ({ title: DEVICES[i].title, center: d.center }));
+    return { curve: c, devicePositions: devPts, segments: segs };
   }, []);
 
   return (
@@ -240,10 +365,13 @@ export function ReelScene({
           key={d.id}
           device={d}
           position={devicePositions[i].pos}
-          rotation={devicePositions[i].rot}
+          restYaw={devicePositions[i].restYaw}
+          segmentCenter={devicePositions[i].center}
+          scrollRef={scrollRef}
           onOpen={onOpen}
         />
       ))}
+      <ActiveTitleHUD scrollRef={scrollRef} segments={segments} />
     </Canvas>
   );
 }

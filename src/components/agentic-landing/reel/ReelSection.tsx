@@ -170,13 +170,12 @@ function DeviceCaption({
   return (
     <div
       ref={ref}
-      className="pointer-events-auto max-w-sm text-right transition-opacity"
+      className="pointer-events-auto text-right transition-opacity"
       style={{ opacity: 0 }}
     >
       <p className="text-[10px] uppercase tracking-[0.3em]" style={{ color: "hsl(var(--gold))" }}>
-        {String(index + 1).padStart(2, "0")} · {device.role}
+        {String(index + 1).padStart(2, "0")}
       </p>
-      <h3 className="mt-3 font-serif text-3xl md:text-4xl">{device.title}</h3>
     </div>
   );
 }
