@@ -1,55 +1,70 @@
-## Problem
 
-Right now each device plane is rotated with a fixed yaw (±0.45 rad), so as the camera flies past on the S‑curve, most of the time the user only sees the device edge‑on. There is also no in‑world title — the video name only appears as an HTML caption to the side.
+# Agentic Studios — Brand Artifacts & Video Suite
 
-## Goals
+All outputs delivered to `/mnt/documents/` as downloadable files. Brand: black `#0A0A0A`, gold `hsl(45 56% 51%)` ≈ `#C9A53A`, Instrument Serif headlines with italic gold accent, film-strip sprocket motif.
 
-1. Each device should rotate to **face the camera** as the camera approaches it, so the YouTube thumbnail is fully readable at the "hero" moment of its scroll segment.
-2. Add **3D typography in the scene** that displays the current video's title, animated in/out as that device's segment becomes active.
+## 1. Logo System (3 variants)
 
-## Plan
+Generated as PNGs (transparent + on-black) using imagegen. Sketched concept: a stylized capital **"A"** rendered as a 3D film-production silhouette — the two diagonal legs read as klieg-light stands / camera tripod, the crossbar as a film-strip with sprocket holes, gold metallic finish on matte black.
 
-### 1. Devices face forward (`ReelScene.tsx`)
+- **`agentic-mark.png`** — 1024×1024 transparent. Standalone 3D gold "A" emblem (favicon + app icon source).
+- **`agentic-lockup.png`** — 1920×640 transparent. Mark + "AGENTIC *Studios*" wordmark (Instrument Serif, italic gold "Studios").
+- **`agentic-wordmark.png`** — 1920×480 transparent. Wordmark only.
+- **`favicon.png`** + **`favicon.ico`** — derived from the mark, 256/64/32/16 sizes; wired into `index.html` (replaces current external GCS favicon).
 
-- Replace the static `rotation` prop on `<DeviceCard>` with a billboard‑style behavior driven by scroll proximity:
-  - In `DeviceCard`, accept the device's world position and a `scrollRef` + its segment center `t` value.
-  - Each frame, compute `proximity = 1 - clamp(|scroll - center| * 6, 0, 1)`.
-  - Compute the "facing" rotation by `lookAt(camera.position)` into a temp object, then `slerp` between the resting yaw (the current ±0.45 angled pose, looks cinematic from afar) and the camera‑facing pose using `proximity` as the weight.
-  - This means: far away → angled / cinematic; near its hero moment → squarely facing the camera so the thumbnail is fully visible.
-- Also bump device scale slightly (1.0 → 1.15) at the hero moment via the same `proximity` weight, so the active card "presents" itself.
-- Keep the gentle float/sway, but reduce its amplitude when `proximity` is high so the active card is steady and readable.
+## 2. Social Pack
 
-### 2. 3D typography for the active title
+Composed in Python/Pillow over the rendered lockup + a subtle gold-streak panorama backdrop (matches the landing skybox vibe).
 
-- Add `troika-three-text` (already pulled in by `@react-three/drei`'s `<Text>` helper) via drei's `<Text>` component — no new dependency needed.
-- New `<DeviceTitle3D>` child inside each `<DeviceCard>`:
-  - Renders the device title as 3D text positioned just above the card (`y = +1.4`), using the existing serif feel (load the same Instrument Serif woff/ttf used on the page, falling back to drei's default if unavailable).
-  - Color: `#c9a53a` (gold token), `outlineColor` black for contrast over the panorama.
-  - Opacity & scale driven by the same `proximity` value: invisible when far, fades up + scales from 0.6 → 1.0 as the user reaches that device's segment.
-  - Subtitle line below it (smaller, white, 0.5x size) shows `device.role`.
-- Because it's parented to the card group, it inherits the billboard rotation, so the title turns to face the camera together with the device.
+- `og-1200x630.png` — link preview (Twitter/X, LinkedIn, Facebook, Slack)
+- `twitter-header-1500x500.png`
+- `linkedin-banner-1584x396.png`
+- `instagram-square-1080x1080.png`
 
-### 3. Scrolling title "marquee" between segments (optional secondary effect)
+`index.html` `og:image` and `twitter:image` updated to the new OG asset (uploaded to a public storage bucket so previews resolve).
 
-- Add a single `<GlobalScrollTitle>` mesh in `ReelScene` that always sits ~6 units in front of the camera using `useFrame` (camera‑relative offset).
-- Its text is the title of whichever device segment is currently closest to `scrollRef.current`.
-- It crossfades (opacity tween) when the active index changes, giving a continuous on‑screen typographic "ticker" while flying between devices, even before any single card is fully facing.
+## 3. Three Videos (Remotion + ElevenLabs voiceover)
 
-### 4. Caption cleanup (`ReelSection.tsx`)
+Shared system: 1920×1080, 30fps, Instrument Serif + Inter, black bg, gold accents, film-sprocket rails, slow editorial pacing. Voiceover via ElevenLabs `eleven_multilingual_v2`, voice **Brian** (`nPczCjzI2devNBz1zQrb`) — calm, cinematic. Each script written, narrated to MP3, then mixed under the visual track.
 
-- The HTML `DeviceCaption` is now redundant with in‑scene 3D text — remove it (or keep only the `01 ·` index number, smaller, as an accessibility/SEO fallback).
-- Keep the bottom "Scroll to fly the reel · Click a device to play" hint and the top filmmaker line unchanged.
+### a. Brand Bio Documentary — `agentic-bio.mp4` (~25s)
+Origin → philosophy → the five agents → studios. Scenes: Mark reveal → "Built for directors who think in images" → NEXUS · PRAXIS · SCRIBE · ARCHITECT · EGOS chips with glyphs → MonkeY Teer device flicker → tagline.
 
-### 5. Reduced‑motion fallback
+### b. Launch Video — `agentic-launch.mp4` (~20s)
+Teaser energy. Scenes: countdown sprockets → bold "AGENTIC *Studios*" reveal → "The AI Production Suite" → 5 agent names quick-cut → "Now in early access · agenticstudio.live".
 
-- Unchanged: still renders the static gallery grid; titles already shown there.
+### c. How-To / Studio Tour — `agentic-how-to.mp4` (~30s)
+Mirrors landing flow. Scenes: 1) Land on the reel — fly past 3 device cards. 2) Pick an agent (cards animate in). 3) Try Praxis — prompt typing → result chips. 4) Process steps. 5) Request access → confirmation.
+
+## Technical Notes
+
+- Logo + social composed via `imagegen--generate_image` (premium for typography legibility) and Pillow.
+- Videos scaffolded in `/tmp/remotion-agentic/` per the Remotion skill (musl compositor fix, ffmpeg symlinks). Source TSX kept in `remotion/` in the project for reuse.
+- Voiceover: edge function not needed — generated via ElevenLabs API directly from a sandbox script, using `ELEVENLABS_API_KEY`. If not present, I'll request the secret first.
+- Each video uses `<Audio src={staticFile('vo.mp3')} />` with `muted: false` in the render script; ffmpeg in the sandbox lacks libfdk_aac so I'll use `aac` codec via the default ffmpeg build (compatible) — if encoding fails I'll fall back to muted + deliver VO as a separate `.mp3`.
+
+## Deliverables checklist
+
+```
+/mnt/documents/brand/
+  agentic-mark.png
+  agentic-lockup.png
+  agentic-wordmark.png
+  favicon.png  favicon.ico
+  social/
+    og-1200x630.png
+    twitter-header-1500x500.png
+    linkedin-banner-1584x396.png
+    instagram-square-1080x1080.png
+/mnt/documents/video/
+  agentic-bio.mp4
+  agentic-launch.mp4
+  agentic-how-to.mp4
+```
+
+Plus: `index.html` updated to point favicon + og:image at the new assets.
 
 ## Out of scope
 
-- No changes to backend, routing, agents grid, or any `/app/*` code.
-- No new npm packages — `<Text>` ships with `@react-three/drei` already installed.
-
-## Files touched
-
-- `src/components/agentic-landing/reel/ReelScene.tsx` — billboard logic, 3D `<Text>` per card, optional global scroll title.
-- `src/components/agentic-landing/reel/ReelSection.tsx` — remove/slim `DeviceCaption`.
+- No changes to the 3D reel, agents, auth, or `/app/*` routes.
+- No new database tables or edge functions.
