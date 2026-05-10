@@ -12,6 +12,17 @@ async function sha256(s: string) {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+function getClientIp(req: Request): string {
+  // Use the LAST entry in x-forwarded-for (the one added by the trusted edge proxy)
+  // to prevent clients from forging new rate-limit buckets via prepended values.
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const parts = xff.split(",").map((p) => p.trim()).filter(Boolean);
+    if (parts.length) return parts[parts.length - 1];
+  }
+  return "anon";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -22,8 +33,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "anon";
-    const ipHash = await sha256(ip + ":praxis");
+    const ipHash = await sha256(getClientIp(req) + ":praxis");
 
     const url = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -56,7 +66,8 @@ Deno.serve(async (req) => {
     });
     if (!aiResp.ok) {
       const t = await aiResp.text();
-      return new Response(JSON.stringify({ error: `AI error: ${t}` }), {
+      console.error("AI gateway error", aiResp.status, t);
+      return new Response(JSON.stringify({ error: "AI service unavailable" }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -69,7 +80,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
+    console.error("praxis-demo error", e);
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
