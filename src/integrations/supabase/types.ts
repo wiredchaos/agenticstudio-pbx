@@ -379,6 +379,27 @@ export type Database = {
         }
         Relationships: []
       }
+      early_access_otp_log: {
+        Row: {
+          created_at: string
+          email_hash: string
+          id: string
+          ip_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email_hash: string
+          id?: string
+          ip_hash: string
+        }
+        Update: {
+          created_at?: string
+          email_hash?: string
+          id?: string
+          ip_hash?: string
+        }
+        Relationships: []
+      }
       model_routes: {
         Row: {
           agent_slug: string
