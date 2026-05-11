@@ -25,7 +25,7 @@ export default function AuthPage() {
     setSending(true);
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/onboarding` },
+      options: { emailRedirectTo: "https://agenticstudio.live/onboarding" },
     });
     setSending(false);
     if (error) { toast.error(error.message); return; }
