@@ -1,3 +1,6 @@
+import { useReveal } from "@/hooks/useReveal";
+import { BrandVideo } from "./BrandVideo";
+
 const STEPS = [
   { n: "01", title: "Set your DNA", desc: "Upload scripts, references, tone notes. PRAXIS learns how you direct." },
   { n: "02", title: "Brief an agent", desc: "Describe the scene. PRAXIS generates a shot list. SCRIBE builds the breakdown." },
@@ -5,8 +8,9 @@ const STEPS = [
 ];
 
 export function Process() {
+  const { ref, shown } = useReveal();
   return (
-    <section className="relative bg-background px-6 py-24 md:py-32">
+    <section ref={ref} className="relative bg-background px-6 py-24 md:py-32">
       <div className="mx-auto max-w-6xl">
         <p className="text-[10px] uppercase tracking-[0.4em]" style={{ color: "hsl(var(--gold))" }}>
           The Process
@@ -14,13 +18,40 @@ export function Process() {
         <h2 className="mt-3 font-serif text-4xl md:text-5xl">From idea to production, in seconds.</h2>
 
         <div className="mt-14 grid gap-12 md:grid-cols-3">
-          {STEPS.map((s) => (
-            <div key={s.n}>
-              <div className="font-serif text-5xl" style={{ color: "hsl(var(--gold))" }}>{s.n}</div>
+          {STEPS.map((s, i) => (
+            <div
+              key={s.n}
+              className={`transition-all duration-700 ease-out ${
+                shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
+              style={{ transitionDelay: `${i * 120}ms` }}
+            >
+              <div className="font-serif text-5xl brand-shimmer" style={{ color: "hsl(var(--gold))" }}>
+                {s.n}
+              </div>
               <h3 className="mt-4 font-serif text-2xl">{s.title}</h3>
               <p className="mt-3 text-sm text-muted-foreground">{s.desc}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-20">
+          <p
+            className="text-[10px] uppercase tracking-[0.4em]"
+            style={{ color: "hsl(var(--gold))" }}
+          >
+            Studio Tour
+          </p>
+          <h3 className="mt-3 font-serif text-3xl md:text-4xl">
+            Take a walk through the floor.
+          </h3>
+          <div className="mt-8">
+            <BrandVideo
+              src="/video/agentic-how-to.mp4"
+              poster="/video/agentic-how-to.jpg"
+              aspect="16/9"
+            />
+          </div>
         </div>
       </div>
     </section>
