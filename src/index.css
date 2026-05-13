@@ -653,3 +653,73 @@ html {
 .mindloop .border-border { border-color: hsl(var(--border)); }
 .mindloop .bg-foreground { background-color: hsl(var(--foreground)); }
 .mindloop .text-background { color: hsl(var(--background)); }
+
+/* === Brand artifact animations === */
+@keyframes brand-shimmer-sweep {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+.brand-shimmer {
+  position: relative;
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    hsl(var(--gold) / 0.35) 50%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: brand-shimmer-sweep 7s linear infinite;
+}
+.brand-mark.brand-shimmer { background: none; animation: none; }
+.brand-mark.brand-shimmer img { filter: drop-shadow(0 0 0.5rem hsl(var(--gold) / 0.15)); }
+
+@keyframes brand-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px hsl(var(--gold) / 0.25)); }
+  50% { filter: drop-shadow(0 0 18px hsl(var(--gold) / 0.55)); }
+}
+.brand-glow { animation: brand-glow-pulse 4.5s ease-in-out infinite; }
+
+@keyframes brand-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.brand-drift { animation: brand-drift 6s ease-in-out infinite; }
+
+/* Brand video frame with sprocket rails + reveal border */
+.brand-video-frame {
+  background: #000;
+  border: 1px solid hsl(var(--gold) / 0.25);
+  box-shadow: 0 30px 80px -40px hsl(var(--gold) / 0.35);
+}
+.brand-video-frame::before,
+.brand-video-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid hsl(var(--gold) / 0);
+  transition: border-color 900ms ease;
+}
+.brand-video-revealed::after { border-color: hsl(var(--gold) / 0.5); }
+
+.brand-sprocket-rail {
+  position: absolute;
+  left: 0; right: 0;
+  height: 14px;
+  background-image: radial-gradient(circle, hsl(var(--gold) / 0.55) 1.5px, transparent 2px);
+  background-size: 18px 14px;
+  background-repeat: repeat-x;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 2;
+}
+.brand-sprocket-rail--top { top: 0; }
+.brand-sprocket-rail--bottom { bottom: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-shimmer, .brand-glow, .brand-drift { animation: none !important; }
+  .brand-video-frame::after { transition: none; }
+}

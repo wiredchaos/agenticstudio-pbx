@@ -26,7 +26,12 @@ export function EarlyAccess() {
 
   return (
     <section id="early-access" className="relative bg-background px-6 py-24 md:py-32">
-      <div className="mx-auto max-w-2xl text-center">
+      <div className="mx-auto max-w-2xl text-center flex flex-col items-center">
+        <img
+          src="/brand/agentic-mark.png"
+          alt=""
+          className="h-16 w-auto mb-6 brand-glow"
+        />
         <p className="text-[10px] uppercase tracking-[0.4em]" style={{ color: "hsl(var(--gold))" }}>
           Early Access
         </p>
