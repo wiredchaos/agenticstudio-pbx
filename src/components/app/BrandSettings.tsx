@@ -68,11 +68,41 @@ export function BrandSettings({ studio, onSaved }: { studio: any; onSaved?: () =
         <TextField label="Wordmark URL" value={theme.wordmark_url || ""} onChange={(v) => set("wordmark_url", v)} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
-          <TextField label="Hero media URL" value={theme.hero_media_url || ""} onChange={(v) => set("hero_media_url", v)} />
+      <div className="border-t border-white/10 pt-5 space-y-4">
+        <h3 className="text-xs uppercase tracking-widest text-white/50">Hero media</h3>
+        <p className="text-xs text-white/40">
+          Upload a looped video (MP4/WebM, ≤ 20MB) or image. Reduced-motion visitors see the poster (or first frame) instead.
+        </p>
+
+        <MediaUploader
+          studioId={studio.id}
+          label="Hero video / image"
+          accept="video/*,image/*"
+          currentUrl={theme.hero_media_url || ""}
+          onUploaded={(url, kind) => {
+            set("hero_media_url", url);
+            set("hero_media_kind", kind);
+          }}
+          onClear={() => {
+            set("hero_media_url", "");
+          }}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <TextField label="Hero media URL (override)" value={theme.hero_media_url || ""} onChange={(v: string) => set("hero_media_url", v)} />
+          </div>
+          <SelectField label="Kind" value={theme.hero_media_kind || "image"} onChange={(v: string) => set("hero_media_kind", v as any)} options={["image", "video"]} />
         </div>
-        <SelectField label="Kind" value={theme.hero_media_kind || "image"} onChange={(v) => set("hero_media_kind", v as any)} options={["image", "video"]} />
+
+        <MediaUploader
+          studioId={studio.id}
+          label="Reduced-motion poster (image)"
+          accept="image/*"
+          currentUrl={theme.hero_poster_url || ""}
+          onUploaded={(url) => set("hero_poster_url", url)}
+          onClear={() => set("hero_poster_url", "")}
+        />
       </div>
 
       <div className="border-t border-white/10 pt-5 space-y-3">
