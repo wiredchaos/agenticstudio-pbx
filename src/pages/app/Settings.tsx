@@ -3,6 +3,7 @@ import { useStudio } from "@/hooks/useStudio";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { BrandSettings } from "@/components/app/BrandSettings";
 
 export default function Settings() {
   const { data: studio } = useStudio();
@@ -31,6 +32,8 @@ export default function Settings() {
         <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-2">Settings</p>
         <h1 className="font-bagel text-4xl">Studio configuration.</h1>
       </div>
+
+      {studio && <BrandSettings studio={studio} />}
 
       <div className="glass-effect rounded-xl p-6 space-y-5">
         <h2 className="text-sm tracking-[0.3em] uppercase text-white/40">Infrastructure mode</h2>

@@ -1,73 +1,120 @@
 ## Goal
 
-Translate the strategy doc into shipped surface area across landing, content, in-app, and backend — without breaking the existing Agentic Studios aesthetic (black + gold, Instrument Serif, sprocket rails).
+Each studio inherits its own brand aesthetic (colors, typography, logo, hero media) and unlocks features based on a tier. Existing `basic` studios stay on the default Agentic look; `premium` studios (starting with MonkeY Teer) get the full funnel: custom theme, hero video, public profile, lead magnet, model routes, distribution.
 
-## 1. Landing — new "Studio Stack" section
+## 1. Schema (one migration)
 
-Insert between `Process` and `RoutingLayer` in `MarketingHome.tsx`.
+Add to `public.studios`:
+- `brand_theme jsonb NOT NULL DEFAULT '{}'::jsonb`
+  ```json
+  {
+    "primary": "0 0% 90%",       // hsl triplet
+    "accent":  "45 56% 51%",
+    "background": "0 0% 4%",
+    "foreground": "0 0% 98%",
+    "display_font": "Instrument Serif",
+    "body_font":    "Inter",
+    "logo_url":     "/brand/agentic-mark.png",
+    "wordmark_url": "/brand/agentic-wordmark.png",
+    "hero_media_url": null,
+    "hero_media_kind": "image"   // "image" | "video"
+  }
+  ```
+- `tier text NOT NULL DEFAULT 'basic'` — values: `basic`, `premium`.
+- `funnel jsonb NOT NULL DEFAULT '{}'::jsonb` — per-feature flags (`lead_magnet`, `custom_domain_cta`, `email_capture`, `pricing_block`, `testimonials`, `cta_buttons[]`).
 
-`src/components/agentic-landing/StudioStack.tsx`
-- Header: *"The studio runs on a stack of agents."* (italic gold accent on "stack")
-- 5 department cards in a film-strip row (sprocket rail top/bottom):
-  - Research & Lore → Exa
-  - Script & Memory → Fastio
-  - Voice → Chatterbox
-  - Visual FX → Flux / NanoBanana / LTX Lipdub
-  - Automation → Playwright
-- Each card: dept name, MCP name, one-line "what it does in the studio", status pill (`Live` / `Scaffolded` / `Planned`).
-- Below: horizontal pipeline diagram `Research → Script → Voice → VFX → Distribution` with animated gold pulse traveling left→right (CSS keyframes, respects `prefers-reduced-motion`).
+Seed `MonkeY Teer` row with `tier='premium'` and a brand_theme inspired by devinteer.com (dark, gold/amber accent, Instrument Serif display) plus hero video URL pointing at one of the existing `/video/agentic-*.mp4` assets.
 
-## 2. Landing — Hybrid principles strip
+## 2. Theme runtime
 
-`src/components/agentic-landing/HybridPrinciples.tsx`, inserted after `AgentsGrid`.
-4-column responsive grid rendering the Ponder × Agentic table:
-| Ponder strength | In Agentic Studios | Result |
-Plain semantic table styled with `border-white/10`, gold row hover.
+New `src/lib/studioTheme.ts`:
+- `applyStudioTheme(theme)` — sets CSS variables on a scoped root: `--primary`, `--accent`, `--background`, `--foreground`, `--brand-display`, `--brand-body`. Loads display/body fonts from Google Fonts on demand (idempotent `<link>` injection).
+- `useStudioTheme(studio)` hook — applies on mount, restores Agentic defaults on unmount.
 
-## 3. New `/manifesto` page
+New `src/components/studio/StudioThemeProvider.tsx`:
+- Wraps children in a `<div data-studio-theme>` whose inline `style` carries the HSL vars + `font-family` overrides.
+- Exposes `useBrand()` for logo/wordmark/hero.
 
-`src/pages/Manifesto.tsx` + route in `App.tsx`.
-- Hero: *"AI is the crew. The human is the director."*
-- Sections: Deep Synthesis · Filmmaker DNA · Visual Mapping · Creator Sovereignty · Human-in-the-Loop policy.
-- Footer link added in `Footer.tsx`; navbar gets `Manifesto` link.
+CSS additions in `index.css`:
+- `[data-studio-theme]` selector re-binds the same tokens used by Tailwind/Agentic components, so any Agentic primitive (`bg-background`, `text-foreground`, `border-primary`) automatically restyles inside a themed scope. Gold-specific selectors fall back to `--accent`.
 
-## 4. In-app — Studio Pipeline view
+## 3. Surfaces that adopt the studio theme
 
-New tile on `/app/dashboard` above existing stats:
-- 5 department lanes (Research / Script / Voice / VFX / Distribution).
-- Each lane reads recent `agent_runs` filtered by a new `department` text column → status dot + last action.
-- Click a lane → drawer with last 10 runs.
+- **Public**: `/studios/:slug` (`StudioPublic.tsx`) — wrap entire page in `StudioThemeProvider`. Replace the hardcoded "Agentic Studios" wordmark with the studio's logo. Hero block renders studio's `hero_media` (video autoplays muted+loop on premium, image on basic). Premium adds: lead-magnet email capture (writes to `early_access` with `source = studio:<slug>`), pricing/CTA block, testimonial strip, custom-domain CTA. Basic stays minimal (current layout).
+- **In-app**: `AppLayout.tsx` — wrap in `StudioThemeProvider` keyed by active studio so the dashboard adopts the brand's primary/accent. Sidebar logo swaps to studio's `logo_url`.
+- **Studios directory** (`StudiosDirectory.tsx`): each card renders in its own theme swatch (mini preview).
 
-Migration:
-```sql
-ALTER TABLE public.agent_runs ADD COLUMN IF NOT EXISTS department text;
-CREATE INDEX IF NOT EXISTS idx_agent_runs_department ON public.agent_runs(department);
-```
+## 4. Funnel feature gating
 
-## 5. MCP bridge edge functions (scaffolded, no keys required yet)
+`src/lib/tier.ts` — `hasFeature(studio, key)` reads `funnel` for premium, returns `false` for basic by default (with a small allowlist so basic still gets `email_capture` minimally).
 
-Create `supabase/functions/mcp-bridge/index.ts` — single dispatcher:
-- `POST { provider: 'exa'|'fastio'|'pexels'|'openlibrary', action, params }`
-- Routes to provider sub-handlers. Exa/Fastio handlers return `501 { error: 'not_configured', missing_secret: 'EXA_API_KEY' }` until secrets added.
-- Pexels + Open Library handlers work immediately (Open Library is keyless; Pexels uses a publishable-style key — will prompt later).
-- CORS, Zod validation, `verify_jwt = false` not needed (default fine).
+Premium-only blocks rendered conditionally on the public profile:
+- Hero video reel (basic = static cover)
+- Lead magnet form (free download / waitlist)
+- Pricing / CTA buttons array
+- Testimonials carousel
+- "Powered by Agentic Studios" lockup at the bottom (basic shows it prominently, premium can hide / co-brand)
 
-No secrets requested in this pass — surfaces are scaffolded so the user can decide which providers to wire.
+## 5. In-app brand editor (premium only)
 
-## 6. Memory updates
+Extend `src/pages/app/Settings.tsx` with a **Brand** card visible only when `tier === 'premium'`:
+- Color pickers (primary / accent / background) → stored as HSL triplets
+- Display + body font selectors (curated list of Google Fonts)
+- Logo + wordmark URL inputs
+- Hero media URL + kind toggle
+- Funnel toggles (lead magnet, pricing, testimonials, custom-domain CTA)
+- Live preview pane wrapped in `StudioThemeProvider`
 
-After build, append to `mem://index.md` Core: "Landing has StudioStack + HybridPrinciples; `/manifesto` page; Dashboard has Pipeline lanes; `mcp-bridge` edge function dispatches Exa/Fastio/Pexels/OpenLibrary."
+Basic studios see a locked "Upgrade to premium" card describing what unlocks (no payment wiring in this pass — just a CTA that opens early-access).
 
-## Out of scope (this pass)
+## 6. Data seed
 
-- Real Exa/Fastio/Chatterbox/ComfyUI integration (needs accounts + keys — follow-up).
-- Sequential Thinking MCP orchestration runtime.
-- ComfyUI / LTX Lipdub local runner.
-- Changes to ReelScene 3D or Auth.
+`supabase--insert` after migration:
+- Update existing MonkeY Teer studio row with `tier='premium'` and a fully populated `brand_theme` + `funnel` (lead_magnet, pricing, testimonials, hero video pointing at `/video/agentic-launch.mp4`, accent gold `45 70% 55%`, display `Instrument Serif`, body `Inter`).
+
+## 7. Memory
+
+Update `mem://index.md` Core with: studios carry `brand_theme` + `tier`; `StudioThemeProvider` re-themes `/studios/:slug` and `/app/*` per active studio; MonkeY Teer is `premium`, all others `basic`.
+
+## Out of scope
+
+- Auto-extracting brand from a URL (can ship later as an edge function feeding `brand_theme`).
+- Real payments / Stripe upgrade flow.
+- Per-studio custom domains (CTA only).
 
 ## Technical notes
 
-- All new components use existing tokens (`--gold`, `font-instrument`, `glass-effect`, `brand-sprocket-rail`).
-- Pipeline animation: 8s linear infinite, paused under `prefers-reduced-motion`.
-- New route lazy-loaded in `App.tsx`.
-- `agent_runs.department` nullable; existing rows untouched.
+```text
+studios
+ ├── tier: 'basic' | 'premium'
+ ├── brand_theme: { primary, accent, background, foreground,
+ │                  display_font, body_font, logo_url,
+ │                  wordmark_url, hero_media_url, hero_media_kind }
+ └── funnel: { lead_magnet, pricing_block, testimonials,
+               custom_domain_cta, cta_buttons[] }
+
+StudioThemeProvider
+ └── injects CSS vars + font links, scoped to <div data-studio-theme>
+
+hasFeature(studio, key)
+ └── basic  → allowlist-only
+ └── premium → reads studio.funnel
+```
+
+New files:
+- `src/lib/studioTheme.ts`
+- `src/lib/tier.ts`
+- `src/components/studio/StudioThemeProvider.tsx`
+- `src/components/studio/BrandHero.tsx`
+- `src/components/studio/LeadMagnet.tsx`
+- `src/components/studio/PricingBlock.tsx`
+- `src/components/app/BrandSettings.tsx`
+
+Edited files:
+- `supabase` migration (1)
+- `src/index.css` (scoped token bindings)
+- `src/pages/StudioPublic.tsx`
+- `src/pages/app/AppLayout.tsx`
+- `src/pages/app/Settings.tsx`
+- `src/pages/StudiosDirectory.tsx`
+- `mem://index.md`

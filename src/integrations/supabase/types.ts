@@ -558,10 +558,12 @@ export type Database = {
       studios: {
         Row: {
           archive_size_estimate: string | null
+          brand_theme: Json
           cover_url: string | null
           created_at: string
           director_id: string
           founder_name: string
+          funnel: Json
           id: string
           infrastructure_mode: string
           is_public: boolean
@@ -569,14 +571,17 @@ export type Database = {
           slug: string
           style_notes: string | null
           tagline: string | null
+          tier: string
           updated_at: string
         }
         Insert: {
           archive_size_estimate?: string | null
+          brand_theme?: Json
           cover_url?: string | null
           created_at?: string
           director_id: string
           founder_name: string
+          funnel?: Json
           id?: string
           infrastructure_mode?: string
           is_public?: boolean
@@ -584,14 +589,17 @@ export type Database = {
           slug: string
           style_notes?: string | null
           tagline?: string | null
+          tier?: string
           updated_at?: string
         }
         Update: {
           archive_size_estimate?: string | null
+          brand_theme?: Json
           cover_url?: string | null
           created_at?: string
           director_id?: string
           founder_name?: string
+          funnel?: Json
           id?: string
           infrastructure_mode?: string
           is_public?: boolean
@@ -599,6 +607,7 @@ export type Database = {
           slug?: string
           style_notes?: string | null
           tagline?: string | null
+          tier?: string
           updated_at?: string
         }
         Relationships: [
