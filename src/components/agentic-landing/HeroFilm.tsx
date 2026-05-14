@@ -15,13 +15,14 @@ export function HeroFilm() {
         muted
         loop
         playsInline
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25 motion-reduce:hidden"
+        preload="auto"
+        className="pointer-events-none fixed inset-0 -z-10 h-screen w-screen object-cover opacity-40 motion-reduce:hidden"
       />
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none fixed inset-0 -z-10"
         style={{
           background:
-            "linear-gradient(180deg, hsl(var(--background) / 0.6) 0%, hsl(var(--background) / 0.4) 50%, hsl(var(--background)) 100%)",
+            "linear-gradient(180deg, hsl(var(--background) / 0.55) 0%, hsl(var(--background) / 0.7) 60%, hsl(var(--background) / 0.85) 100%)",
         }}
       />
       <div className="relative mx-auto max-w-7xl">
