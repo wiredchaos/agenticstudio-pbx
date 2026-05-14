@@ -1,52 +1,76 @@
-## 1. Make the 3D scroll-reel reusable
+## Revised plan — drop ElevenLabs, use built-in/free audio
 
-Refactor `src/components/agentic-landing/reel/` so `ReelScene` + `ReelSection` accept props instead of importing `DEVICES` directly:
+Lovable AI Gateway covers text + images but **not music generation**. So instead of generating tracks at build time, we ship the 5 ambient mixes as **curated royalty-free streams** referenced by URL — no API key, no edge function, no asset bundling needed up front.
 
-- `ReelSection` now takes `{ videos: Device[], heading, subheading, accentHsl, ctaHref?, ctaLabel? }`.
-- Existing landing usage (`MarketingHome`) keeps its current MonkeY Teer config via `DEVICES`.
-- New wrapper `src/components/studio/StudioReel.tsx` reads the active studio's `funnel.reel_videos` and `brand_theme.accent` and renders the same scene with the studio's accent color (frame, glow, text) instead of MonkeY gold.
+### 1. Audio source
 
-## 2. Premium gate
+Use 5 CC0 / royalty-free loops hosted on a public CDN (e.g. `cdn.pixabay.com/audio/...` or `freesound.org` direct MP3s). One short looping track per genre:
 
-Add `reel_3d` as a funnel feature key:
+- **EDM** — driving 4-on-the-floor loop
+- **World** — global percussion + flute
+- **Lofi Hip Hop** — mellow beats
+- **Samba** — Brazilian percussion
+- **Afrobass** — afrobeat groove
 
-- `src/lib/tier.ts` — include `reel_3d` in the premium allowlist.
-- `StudioPublic.tsx` — when `hasFeature(studio,'reel_3d')` and `funnel.reel_videos?.length > 0`, render `<StudioReel />` near the top of the public profile (above projects). Basic studios see nothing extra. Premium with no videos configured sees a small "Add YouTube reel in Settings" hint visible only to the owner.
+Stored as a constant map in `src/components/audio/mixTracks.ts`:
 
-## 3. Ambient music mix
+```ts
+export const MIX_TRACKS = {
+  lofi:     { label: "Lofi Hip Hop", url: "https://cdn.pixabay.com/...mp3" },
+  edm:      { label: "EDM",          url: "..." },
+  world:    { label: "World",        url: "..." },
+  samba:    { label: "Samba",        url: "..." },
+  afrobass: { label: "Afrobass",     url: "..." },
+} as const;
+```
 
-Add a floating audio control over any reel (landing + studio) with 5 genre presets:
+If a URL ever 404s, swap it — no rebuild of audio assets.
 
-- **EDM**, **World Music**, **Lofi Hip Hop**, **Samba**, **Afrobass**
+### 2. `MixPlayer.tsx` (new)
 
-Implementation:
+Bottom-right floating glass pill, visible only over the 3D reel:
 
-- One-time generation of 5 short looping tracks (~30s each) via ElevenLabs Music API → saved as static MP3s in `public/audio/mix/{slug}.mp3`. No runtime API calls / no edge function. Generation is a one-shot script (`scripts/generate-mix.ts`) run with `ELEVENLABS_API_KEY`.
-- New `src/components/audio/MixPlayer.tsx`: bottom-right floating pill with genre buttons + mute toggle. Uses `<audio loop>` + WebAudio gain ramp for crossfade between genres. **Default = muted** (browsers block autoplay unaccompanied by gesture); first click unmutes and plays the chosen genre.
-- Mounted inside `ReelSection`, visible during the 3D segment only.
-- Per-studio default genre stored in `brand_theme.audio_mix` (one of the 5 slugs). Landing default = `lofi`.
+- Genre buttons (5) + mute toggle
+- Single `<audio loop>` element; switching genre = swap `src` + fade gain via WebAudio
+- Default **muted** (browser autoplay policy); first user click unmutes and starts playback
+- Reads default genre from `studio.brand_theme.audio_mix` (landing default = `lofi`)
+- Persists last choice in `localStorage("mix:genre")`
 
-Secret check: confirm `ELEVENLABS_API_KEY` exists. If missing, ask user to add it before running the generation script.
+### 3. 3D reel as premium per-studio feature
 
-## 4. Studio settings (premium)
+Refactor `src/components/agentic-landing/reel/`:
+
+- `ReelSection` accepts props `{ videos, heading, subheading, accentHsl, ctaHref?, ctaLabel?, defaultMix? }` instead of importing `DEVICES`.
+- `ReelScene` accepts `{ videos, accentHsl, scrollRef, onOpen }` — accent color drives frame/glow/text instead of hardcoded gold.
+- New `src/components/studio/StudioReel.tsx` reads active studio's `funnel.reel_videos` + `brand_theme.accent` + `brand_theme.audio_mix` and renders `<ReelSection>`.
+- `MarketingHome.tsx` passes the existing `DEVICES` constant + `lofi` default explicitly.
+
+### 4. Premium gating
+
+- `src/lib/tier.ts` — add `reel_3d` to the premium-only feature set.
+- `StudioPublic.tsx` — render `<StudioReel />` when `hasFeature(studio,'reel_3d')` and `funnel.reel_videos?.length > 0`.
+- Basic studios: nothing extra. Premium with no videos configured: small owner-only "Add YouTube reel in Settings" hint.
+
+### 5. Studio settings (premium only)
 
 Extend `BrandSettings.tsx`:
 
-- **Reel videos** — list editor (YouTube ID, Title, Role). Up to 10 entries. Stored in `studios.funnel.reel_videos`.
-- **Default audio mix** — select among the 5 genres. Stored in `brand_theme.audio_mix`.
-- Shown only when `tier === 'premium'`. Basic studios see "Upgrade to unlock 3D reel + audio mix".
+- **Reel videos** editor — list of up to 10 entries (YouTube ID, Title, Role). Stored in `studios.funnel.reel_videos`.
+- **Default audio mix** — `<select>` of the 5 genres. Stored in `brand_theme.audio_mix`.
+- **Enable 3D Reel** toggle — sets `funnel.reel_3d`.
+- Basic tier sees the existing "Upgrade" lock card.
 
-## 5. Schema
+### 6. Schema
 
-No migration needed — `funnel` and `brand_theme` are already `jsonb`. New keys (`reel_videos`, `audio_mix`) are additive.
+No migration. `funnel` and `brand_theme` are already `jsonb`; new keys (`reel_videos`, `audio_mix`, `reel_3d`) are additive.
 
-## Out of scope
+### Files
 
-- Per-track licensing UI / artist credit (just "Generated by ElevenLabs" footnote).
-- User-uploaded audio.
-- Per-video volume/EQ.
+- **new**: `src/components/studio/StudioReel.tsx`, `src/components/audio/MixPlayer.tsx`, `src/components/audio/mixTracks.ts`
+- **edit**: `src/components/agentic-landing/reel/ReelSection.tsx`, `src/components/agentic-landing/reel/ReelScene.tsx`, `src/lib/tier.ts`, `src/lib/studioTheme.ts` (add `audio_mix` to `BrandTheme`, `reel_videos`/`reel_3d` to `StudioFunnel`), `src/pages/StudioPublic.tsx`, `src/components/app/BrandSettings.tsx`, `src/pages/MarketingHome.tsx`
 
-## Files
+### Out of scope
 
-- new: `src/components/studio/StudioReel.tsx`, `src/components/audio/MixPlayer.tsx`, `scripts/generate-mix.ts`, `public/audio/mix/{edm,world,lofi,samba,afrobass}.mp3`
-- edit: `src/components/agentic-landing/reel/ReelSection.tsx`, `ReelScene.tsx` (props instead of constants), `src/lib/tier.ts`, `src/pages/StudioPublic.tsx`, `src/components/app/BrandSettings.tsx`, `src/pages/MarketingHome.tsx` (pass DEVICES explicitly)
+- Generating original music (deferred — can add ElevenLabs later if you want unique tracks)
+- Per-track volume/EQ
+- User-uploaded audio
