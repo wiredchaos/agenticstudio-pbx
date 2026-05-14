@@ -11,6 +11,9 @@ export function Navbar() {
         </span>
       </Link>
       <nav className="flex items-center gap-6 text-xs uppercase tracking-[0.25em]">
+        <Link to="/manifesto" className="hidden sm:inline text-muted-foreground hover:text-foreground transition">
+          Manifesto
+        </Link>
         <Link to="/studios" className="text-muted-foreground hover:text-foreground transition">
           Studios
         </Link>

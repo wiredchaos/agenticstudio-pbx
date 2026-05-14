@@ -1,83 +1,73 @@
-## Plan: Embed Videos + Animate Artifacts on Landing
+## Goal
 
-Bring the generated brand assets into the live site and add motion so they feel native to the Agentic Studios reel — not bolted on.
+Translate the strategy doc into shipped surface area across landing, content, in-app, and backend — without breaking the existing Agentic Studios aesthetic (black + gold, Instrument Serif, sprocket rails).
 
-### What gets shipped
+## 1. Landing — new "Studio Stack" section
 
-**Three brand videos**, copied from `/mnt/documents/video/` into `public/video/`:
-- `agentic-launch.mp4` → opens the page in a new **HeroFilm** above the reel
-- `agentic-bio.mp4` → embedded inside a new **BrandFilm** section (between AgentsGrid and PraxisDemo) as the "manifesto" piece
-- `agentic-how-to.mp4` → embedded inside Process as a "Studio tour" reveal
+Insert between `Process` and `RoutingLayer` in `MarketingHome.tsx`.
 
-**Brand artifacts**, copied from `/mnt/documents/brand/` into `public/brand/`:
-- `agentic-mark.png` (the gold sprocket "A")
-- `agentic-lockup.png` / `agentic-lockup-on-black.png`
-- `agentic-wordmark.png`
+`src/components/agentic-landing/StudioStack.tsx`
+- Header: *"The studio runs on a stack of agents."* (italic gold accent on "stack")
+- 5 department cards in a film-strip row (sprocket rail top/bottom):
+  - Research & Lore → Exa
+  - Script & Memory → Fastio
+  - Voice → Chatterbox
+  - Visual FX → Flux / NanoBanana / LTX Lipdub
+  - Automation → Playwright
+- Each card: dept name, MCP name, one-line "what it does in the studio", status pill (`Live` / `Scaffolded` / `Planned`).
+- Below: horizontal pipeline diagram `Research → Script → Voice → VFX → Distribution` with animated gold pulse traveling left→right (CSS keyframes, respects `prefers-reduced-motion`).
 
-### Section-by-section changes
+## 2. Landing — Hybrid principles strip
 
-```text
-/  (MarketingHome)
-├── Navbar                    ← swap text wordmark for animated <BrandMark> (gold mark + lockup, slow shimmer)
-├── HeroFilm        [NEW]     ← full-bleed agentic-launch.mp4, autoplay/muted/loop, gold sprocket overlays
-├── ReelSection               ← unchanged (3D scene)
-├── AgentsGrid                ← each agent card: stagger-fade on scroll, gold underline draw on hover
-├── BrandFilm       [NEW]     ← agentic-bio.mp4 in a 21:9 letterbox frame with sprocket rails
-│                                kinetic title "The studio, in 25 seconds." (italic gold accent word)
-├── PraxisDemo                ← unchanged
-├── Process                   ← inline agentic-how-to.mp4 panel ("Take the studio tour")
-│                                + scroll-triggered step number reveal
-├── RoutingLayer              ← animated agent badges using brand mark
-├── EarlyAccess               ← lockup logo above headline, slow gold-glow pulse
-└── Footer                    ← wordmark with subtle drift
+`src/components/agentic-landing/HybridPrinciples.tsx`, inserted after `AgentsGrid`.
+4-column responsive grid rendering the Ponder × Agentic table:
+| Ponder strength | In Agentic Studios | Result |
+Plain semantic table styled with `border-white/10`, gold row hover.
+
+## 3. New `/manifesto` page
+
+`src/pages/Manifesto.tsx` + route in `App.tsx`.
+- Hero: *"AI is the crew. The human is the director."*
+- Sections: Deep Synthesis · Filmmaker DNA · Visual Mapping · Creator Sovereignty · Human-in-the-Loop policy.
+- Footer link added in `Footer.tsx`; navbar gets `Manifesto` link.
+
+## 4. In-app — Studio Pipeline view
+
+New tile on `/app/dashboard` above existing stats:
+- 5 department lanes (Research / Script / Voice / VFX / Distribution).
+- Each lane reads recent `agent_runs` filtered by a new `department` text column → status dot + last action.
+- Click a lane → drawer with last 10 runs.
+
+Migration:
+```sql
+ALTER TABLE public.agent_runs ADD COLUMN IF NOT EXISTS department text;
+CREATE INDEX IF NOT EXISTS idx_agent_runs_department ON public.agent_runs(department);
 ```
 
-### Motion system (consistent across all artifacts)
+## 5. MCP bridge edge functions (scaffolded, no keys required yet)
 
-- **Entrance:** `IntersectionObserver` → fade + 16px rise, 600ms ease-out, staggered 80ms between siblings
-- **Mark/lockup idle:** very slow gold shimmer (CSS `@keyframes shimmer` 8s linear, mask-image gradient sweep)
-- **Hover on logo:** sprocket mark rotates 6° + scales 1.04 (200ms)
-- **Video frames:** thin gold border draws in via `clip-path` on first scroll-into-view, sprocket dots tick along the rail at 24fps illusion
-- **Reduced motion:** all of the above collapse to plain fade-in
+Create `supabase/functions/mcp-bridge/index.ts` — single dispatcher:
+- `POST { provider: 'exa'|'fastio'|'pexels'|'openlibrary', action, params }`
+- Routes to provider sub-handlers. Exa/Fastio handlers return `501 { error: 'not_configured', missing_secret: 'EXA_API_KEY' }` until secrets added.
+- Pexels + Open Library handlers work immediately (Open Library is keyless; Pexels uses a publishable-style key — will prompt later).
+- CORS, Zod validation, `verify_jwt = false` not needed (default fine).
 
-### Video player behavior
+No secrets requested in this pass — surfaces are scaffolded so the user can decide which providers to wire.
 
-Single shared `<BrandVideo>` component:
-- `autoplay muted playsinline loop` by default for ambient sections (HeroFilm, RoutingLayer ambience)
-- Click-to-unmute pill ("🔊 Sound on") in the corner — mute toggles `video.muted`
-- Lazy-load via `preload="metadata"` + `IntersectionObserver` (only loads sources when within 1 viewport)
-- Poster frame: extracted from each video using ffmpeg in setup step, saved as `public/video/<name>.jpg`
-- Falls back to first frame of `agentic-launch.mp4` for the hero if poster generation fails
-- Wrapped in a 16:9 (or 21:9 for BrandFilm) container with film-sprocket rails reused from `FilmStripRail`
+## 6. Memory updates
 
-### Files
+After build, append to `mem://index.md` Core: "Landing has StudioStack + HybridPrinciples; `/manifesto` page; Dashboard has Pipeline lanes; `mcp-bridge` edge function dispatches Exa/Fastio/Pexels/OpenLibrary."
 
-**New:**
-- `src/components/agentic-landing/BrandMark.tsx` — animated logo (mark + wordmark variants)
-- `src/components/agentic-landing/BrandVideo.tsx` — reusable video player with sprocket frame
-- `src/components/agentic-landing/HeroFilm.tsx` — top-of-page launch video
-- `src/components/agentic-landing/BrandFilm.tsx` — bio video section
-- `src/hooks/useReveal.ts` — IntersectionObserver-based fade-in hook
-- `public/video/agentic-launch.mp4`, `agentic-bio.mp4`, `agentic-how-to.mp4` (+ matching `.jpg` posters)
-- `public/brand/agentic-mark.png`, `agentic-lockup.png`, `agentic-wordmark.png`
+## Out of scope (this pass)
 
-**Edited:**
-- `src/pages/MarketingHome.tsx` — insert HeroFilm + BrandFilm
-- `src/components/agentic-landing/Navbar.tsx` — use `<BrandMark variant="lockup" />`
-- `src/components/agentic-landing/Process.tsx` — embed how-to video panel
-- `src/components/agentic-landing/AgentsGrid.tsx` — add reveal hook + hover underline
-- `src/components/agentic-landing/EarlyAccess.tsx` — lockup with glow pulse
-- `src/components/agentic-landing/Footer.tsx` — wordmark drift
-- `src/index.css` — add `@keyframes shimmer`, `goldGlow`, `sprocketTick`, `revealRise`
+- Real Exa/Fastio/Chatterbox/ComfyUI integration (needs accounts + keys — follow-up).
+- Sequential Thinking MCP orchestration runtime.
+- ComfyUI / LTX Lipdub local runner.
+- Changes to ReelScene 3D or Auth.
 
-### Out of scope
+## Technical notes
 
-- Re-recording or re-editing the videos themselves
-- Adding a voiceover audio track
-- Any changes to `/app/*`, `/auth`, `/onboarding`, or backend
-- Any new database tables, edge functions, or RLS changes
-- Touching the 3D ReelScene (already has its own motion system)
-
-### Verification
-
-After implementation: load `/`, confirm hero video autoplays muted, scroll through and confirm each video lazy-loads + each artifact reveals on scroll, toggle `prefers-reduced-motion` and confirm motion collapses to simple fades.
+- All new components use existing tokens (`--gold`, `font-instrument`, `glass-effect`, `brand-sprocket-rail`).
+- Pipeline animation: 8s linear infinite, paused under `prefers-reduced-motion`.
+- New route lazy-loaded in `App.tsx`.
+- `agent_runs.department` nullable; existing rows untouched.

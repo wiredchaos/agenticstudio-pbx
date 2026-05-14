@@ -10,6 +10,7 @@ import Onboarding from "./pages/Onboarding";
 import StudiosDirectory from "./pages/StudiosDirectory";
 import StudioPublic from "./pages/StudioPublic";
 import NotFound from "./pages/NotFound";
+import Manifesto from "./pages/Manifesto";
 
 import AppLayout from "./pages/app/AppLayout";
 import Dashboard from "./pages/app/Dashboard";
@@ -30,6 +31,7 @@ export default function App() {
         <Toaster theme="dark" position="top-right" />
         <Routes>
           <Route path="/" element={<MarketingHome />} />
+          <Route path="/manifesto" element={<Manifesto />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/onboarding" element={
             <ProtectedRoute requireStudio={false}><Onboarding /></ProtectedRoute>

@@ -3,6 +3,7 @@ import { useStudio } from "@/hooks/useStudio";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, XCircle, Activity } from "lucide-react";
 import { toast } from "sonner";
+import { PipelineLanes } from "@/components/app/PipelineLanes";
 
 export default function Dashboard() {
   const { data: studio } = useStudio();
@@ -41,6 +42,8 @@ export default function Dashboard() {
         <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-2">NEXUS — Orchestrator</p>
         <h1 className="font-bagel text-4xl">Studio dashboard</h1>
       </div>
+
+      <PipelineLanes />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Stat label="Active projects" value={projects.length} />
