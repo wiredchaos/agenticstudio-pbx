@@ -111,6 +111,22 @@ export function BrandSettings({ studio, onSaved }: { studio: any; onSaved?: () =
         <Toggle label="Pricing / CTA block" checked={!!funnel.pricing_block} onChange={(v) => setF("pricing_block", v)} />
         <Toggle label="Testimonials" checked={!!funnel.testimonials} onChange={(v) => setF("testimonials", v)} />
         <Toggle label="Custom-domain CTA" checked={!!funnel.custom_domain_cta} onChange={(v) => setF("custom_domain_cta", v)} />
+        <Toggle label="3D scroll reel (immersive)" checked={!!funnel.reel_3d} onChange={(v) => setF("reel_3d", v)} />
+      </div>
+
+      <div className="border-t border-white/10 pt-5 space-y-4">
+        <h3 className="text-xs uppercase tracking-widest text-white/50">3D Reel · YouTube videos</h3>
+        <p className="text-xs text-white/40">Up to 10 entries. Each becomes a floating device in your scroll-driven 3D reel.</p>
+        <ReelVideosEditor
+          videos={(funnel.reel_videos as any) || []}
+          onChange={(v) => setF("reel_videos", v as any)}
+        />
+        <SelectField
+          label="Default audio mix"
+          value={theme.audio_mix || "lofi"}
+          onChange={(v: string) => set("audio_mix", v as any)}
+          options={["lofi", "edm", "world", "samba", "afrobass"]}
+        />
       </div>
 
       <div className="border-t border-white/10 pt-5">
@@ -242,6 +258,62 @@ function MediaUploader({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ReelVideosEditor({ videos, onChange }: { videos: { id: string; title: string; role: string }[]; onChange: (v: { id: string; title: string; role: string }[]) => void }) {
+  const list = videos || [];
+  function update(i: number, patch: Partial<{ id: string; title: string; role: string }>) {
+    onChange(list.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
+  }
+  function remove(i: number) {
+    onChange(list.filter((_, idx) => idx !== i));
+  }
+  function add() {
+    if (list.length >= 10) return;
+    onChange([...list, { id: "", title: "", role: "" }]);
+  }
+  return (
+    <div className="space-y-2">
+      {list.map((v, i) => (
+        <div key={i} className="grid grid-cols-12 gap-2 items-center">
+          <input
+            placeholder="YouTube ID"
+            value={v.id}
+            onChange={(e) => update(i, { id: e.target.value })}
+            className="col-span-3 bg-black/40 border border-white/10 rounded-md px-3 py-2 text-white text-xs"
+          />
+          <input
+            placeholder="Title"
+            value={v.title}
+            onChange={(e) => update(i, { title: e.target.value })}
+            className="col-span-5 bg-black/40 border border-white/10 rounded-md px-3 py-2 text-white text-xs"
+          />
+          <input
+            placeholder="Role"
+            value={v.role}
+            onChange={(e) => update(i, { role: e.target.value })}
+            className="col-span-3 bg-black/40 border border-white/10 rounded-md px-3 py-2 text-white text-xs"
+          />
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="col-span-1 text-[10px] uppercase tracking-widest text-white/40 hover:text-white/80"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+      {list.length < 10 && (
+        <button
+          type="button"
+          onClick={add}
+          className="text-xs uppercase tracking-widest border border-white/15 hover:border-white/40 rounded-md px-4 py-2 text-white/70 hover:text-white"
+        >
+          + Add video
+        </button>
+      )}
     </div>
   );
 }

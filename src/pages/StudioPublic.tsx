@@ -6,6 +6,7 @@ import { StudioThemeProvider } from "@/components/studio/StudioThemeProvider";
 import { BrandHero } from "@/components/studio/BrandHero";
 import { LeadMagnet } from "@/components/studio/LeadMagnet";
 import { PricingBlock } from "@/components/studio/PricingBlock";
+import { StudioReel } from "@/components/studio/StudioReel";
 import { hasFeature, isPremium } from "@/lib/tier";
 
 export default function StudioPublic() {
@@ -48,6 +49,8 @@ export default function StudioPublic() {
       </div>
 
       <BrandHero theme={theme} name={studio.name} tagline={studio.tagline} />
+
+      <StudioReel studio={studio} />
 
       <div className="mx-auto max-w-5xl px-6 py-16 space-y-16">
         <p className="opacity-70 text-lg">Founded by {studio.founder_name}</p>

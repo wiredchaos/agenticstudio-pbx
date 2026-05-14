@@ -1,3 +1,7 @@
+import type { MixGenre } from "@/components/audio/mixTracks";
+
+export type ReelVideo = { id: string; title: string; role: string };
+
 export type BrandTheme = {
   primary?: string;       // HSL triplet "H S% L%"
   accent?: string;
@@ -10,6 +14,7 @@ export type BrandTheme = {
   hero_media_url?: string | null;
   hero_media_kind?: "image" | "video";
   hero_poster_url?: string | null;
+  audio_mix?: MixGenre;
 };
 
 export type StudioFunnel = {
@@ -18,6 +23,8 @@ export type StudioFunnel = {
   testimonials?: boolean;
   custom_domain_cta?: boolean;
   email_capture?: boolean;
+  reel_3d?: boolean;
+  reel_videos?: ReelVideo[];
   cta_buttons?: { label: string; href: string }[];
 };
 
@@ -33,6 +40,7 @@ export const DEFAULT_THEME: Required<Omit<BrandTheme, "hero_media_url">> & { her
   hero_media_url: null,
   hero_media_kind: "image",
   hero_poster_url: null,
+  audio_mix: "lofi",
 };
 
 export function mergeTheme(t?: BrandTheme | null) {

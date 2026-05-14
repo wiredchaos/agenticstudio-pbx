@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
-import { DEVICES, thumb, type Device } from "./devices";
+import { thumb, type Device } from "./devices";
 
 /* -------------------- Procedural panorama skybox -------------------- */
 const PANORAMA_FRAG = /* glsl */ `
@@ -84,6 +84,8 @@ function DeviceCard({
   segmentCenter,
   scrollRef,
   onOpen,
+  accent,
+  lightAccent,
 }: {
   device: Device;
   position: [number, number, number];
@@ -91,6 +93,8 @@ function DeviceCard({
   segmentCenter: number;
   scrollRef: React.MutableRefObject<number>;
   onOpen: (d: Device) => void;
+  accent: string;
+  lightAccent: string;
 }) {
   const tex = useLoader(THREE.TextureLoader, thumb(device.id));
   const ref = useRef<THREE.Group>(null!);
@@ -168,7 +172,7 @@ function DeviceCard({
       {/* gold frame */}
       <mesh position={[0, 0, -0.02]}>
         <planeGeometry args={[3.4, 2.05]} />
-        <meshBasicMaterial color={hover ? "#e8c66a" : "#c9a53a"} transparent opacity={0.9} />
+        <meshBasicMaterial color={hover ? lightAccent : accent} transparent opacity={0.9} />
       </mesh>
       {/* screen */}
       <mesh>
@@ -178,14 +182,14 @@ function DeviceCard({
       {/* glow */}
       <mesh position={[0, 0, -0.05]}>
         <planeGeometry args={[3.8, 2.4]} />
-        <meshBasicMaterial ref={glowMatRef} color="#c9a53a" transparent opacity={0.1} />
+        <meshBasicMaterial ref={glowMatRef} color={accent} transparent opacity={0.1} />
       </mesh>
       {/* 3D title above the card */}
       <Text
         ref={titleRef as any}
         position={[0, 1.55, 0.01]}
         fontSize={0.42}
-        color="#c9a53a"
+        color={accent}
         anchorX="center"
         anchorY="middle"
         outlineWidth={0.012}
@@ -249,9 +253,11 @@ function ScrollRig({
 function ActiveTitleHUD({
   scrollRef,
   segments,
+  accent = "#c9a53a",
 }: {
   scrollRef: React.MutableRefObject<number>;
   segments: { title: string; center: number }[];
+  accent?: string;
 }) {
   const { camera } = useThree();
   const grpRef = useRef<THREE.Group>(null!);
@@ -292,7 +298,7 @@ function ActiveTitleHUD({
       <Text
         ref={textRef as any}
         fontSize={0.22}
-        color="#c9a53a"
+        color={accent}
         anchorX="center"
         anchorY="middle"
         letterSpacing={0.25}
@@ -304,16 +310,35 @@ function ActiveTitleHUD({
   );
 }
 
+function hslCss(triplet: string) {
+  // "45 56% 51%" -> "hsl(45, 56%, 51%)"
+  const parts = triplet.trim().split(/\s+/);
+  if (parts.length < 3) return triplet;
+  return `hsl(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+}
+function lighten(triplet: string, delta = 10) {
+  const parts = triplet.trim().split(/\s+/);
+  if (parts.length < 3) return hslCss(triplet);
+  const l = Math.min(95, parseFloat(parts[2]) + delta);
+  return `hsl(${parts[0]}, ${parts[1]}, ${l}%)`;
+}
+
 /* -------------------- Public scene -------------------- */
 export function ReelScene({
   scrollRef,
   onOpen,
+  videos,
+  accentHsl = "45 56% 51%",
 }: {
   scrollRef: React.MutableRefObject<number>;
   onOpen: (d: Device) => void;
+  videos: Device[];
+  accentHsl?: string;
 }) {
   const mouse = useRef({ x: 0, y: 0 });
   const era = useRef(0);
+  const accent = hslCss(accentHsl);
+  const lightAccent = lighten(accentHsl, 10);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -329,8 +354,8 @@ export function ReelScene({
     const devPts: { pos: [number, number, number]; restYaw: number; center: number }[] = [];
     pts.push(new THREE.Vector3(0, 0, 0));
 
-    const total = DEVICES.length + 2; // hero + outro
-    DEVICES.forEach((_, i) => {
+    const total = videos.length + 2;
+    videos.forEach((_, i) => {
       const z = -8 - i * 7;
       const x = Math.sin(i * 0.9) * 4.5 + (i % 2 === 0 ? -1 : 1) * 0.6;
       const y = Math.cos(i * 0.7) * 1.2;
@@ -342,13 +367,13 @@ export function ReelScene({
       devPts.push({ pos: [x, y, z], restYaw, center });
     });
 
-    pts.push(new THREE.Vector3(0, 6, -8 - DEVICES.length * 7 + 30));
-    pts.push(new THREE.Vector3(0, 10, -8 - DEVICES.length * 7 + 60));
+    pts.push(new THREE.Vector3(0, 6, -8 - videos.length * 7 + 30));
+    pts.push(new THREE.Vector3(0, 10, -8 - videos.length * 7 + 60));
 
     const c = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.5);
-    const segs = devPts.map((d, i) => ({ title: DEVICES[i].title, center: d.center }));
+    const segs = devPts.map((d, i) => ({ title: videos[i].title, center: d.center }));
     return { curve: c, devicePositions: devPts, segments: segs };
-  }, []);
+  }, [videos]);
 
   return (
     <Canvas
@@ -360,7 +385,7 @@ export function ReelScene({
       <Skybox era={era} />
       <ambientLight intensity={0.6} />
       <ScrollRig scroll={scrollRef} curve={curve} era={era} mouse={mouse} />
-      {DEVICES.map((d, i) => (
+      {videos.map((d, i) => (
         <DeviceCard
           key={d.id}
           device={d}
@@ -369,9 +394,11 @@ export function ReelScene({
           segmentCenter={devicePositions[i].center}
           scrollRef={scrollRef}
           onOpen={onOpen}
+          accent={accent}
+          lightAccent={lightAccent}
         />
       ))}
-      <ActiveTitleHUD scrollRef={scrollRef} segments={segments} />
+      <ActiveTitleHUD scrollRef={scrollRef} segments={segments} accent={accent} />
     </Canvas>
   );
 }
