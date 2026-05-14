@@ -253,9 +253,11 @@ function ScrollRig({
 function ActiveTitleHUD({
   scrollRef,
   segments,
+  accent = "#c9a53a",
 }: {
   scrollRef: React.MutableRefObject<number>;
   segments: { title: string; center: number }[];
+  accent?: string;
 }) {
   const { camera } = useThree();
   const grpRef = useRef<THREE.Group>(null!);
