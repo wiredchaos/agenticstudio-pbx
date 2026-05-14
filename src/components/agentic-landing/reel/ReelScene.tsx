@@ -168,7 +168,7 @@ function DeviceCard({
       {/* gold frame */}
       <mesh position={[0, 0, -0.02]}>
         <planeGeometry args={[3.4, 2.05]} />
-        <meshBasicMaterial color={hover ? "#e8c66a" : "#c9a53a"} transparent opacity={0.9} />
+        <meshBasicMaterial color={hover ? lightAccent : accent} transparent opacity={0.9} />
       </mesh>
       {/* screen */}
       <mesh>
@@ -178,14 +178,14 @@ function DeviceCard({
       {/* glow */}
       <mesh position={[0, 0, -0.05]}>
         <planeGeometry args={[3.8, 2.4]} />
-        <meshBasicMaterial ref={glowMatRef} color="#c9a53a" transparent opacity={0.1} />
+        <meshBasicMaterial ref={glowMatRef} color={accent} transparent opacity={0.1} />
       </mesh>
       {/* 3D title above the card */}
       <Text
         ref={titleRef as any}
         position={[0, 1.55, 0.01]}
         fontSize={0.42}
-        color="#c9a53a"
+        color={accent}
         anchorX="center"
         anchorY="middle"
         outlineWidth={0.012}
