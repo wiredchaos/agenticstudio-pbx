@@ -84,6 +84,8 @@ function DeviceCard({
   segmentCenter,
   scrollRef,
   onOpen,
+  accent,
+  lightAccent,
 }: {
   device: Device;
   position: [number, number, number];
@@ -91,6 +93,8 @@ function DeviceCard({
   segmentCenter: number;
   scrollRef: React.MutableRefObject<number>;
   onOpen: (d: Device) => void;
+  accent: string;
+  lightAccent: string;
 }) {
   const tex = useLoader(THREE.TextureLoader, thumb(device.id));
   const ref = useRef<THREE.Group>(null!);
