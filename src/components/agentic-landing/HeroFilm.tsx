@@ -7,9 +7,24 @@ export function HeroFilm() {
   return (
     <section
       ref={ref}
-      className="relative bg-background px-4 pt-28 pb-16 md:px-12 md:pt-32 md:pb-24"
+      className="relative overflow-hidden bg-background px-4 pt-28 pb-16 md:px-12 md:pt-32 md:pb-24"
     >
-      <div className="mx-auto max-w-7xl">
+      <video
+        src="/video/hero-loop.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25 motion-reduce:hidden"
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, hsl(var(--background) / 0.6) 0%, hsl(var(--background) / 0.4) 50%, hsl(var(--background)) 100%)",
+        }}
+      />
+      <div className="relative mx-auto max-w-7xl">
         <div
           className={`flex flex-col items-start gap-4 transition-all duration-700 ease-out ${
             shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
