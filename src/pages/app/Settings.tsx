@@ -3,6 +3,7 @@ import { useStudio } from "@/hooks/useStudio";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { BrandSettings } from "@/components/app/BrandSettings";
 
 export default function Settings() {
   const { data: studio } = useStudio();
