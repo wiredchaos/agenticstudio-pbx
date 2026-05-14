@@ -308,16 +308,35 @@ function ActiveTitleHUD({
   );
 }
 
+function hslCss(triplet: string) {
+  // "45 56% 51%" -> "hsl(45, 56%, 51%)"
+  const parts = triplet.trim().split(/\s+/);
+  if (parts.length < 3) return triplet;
+  return `hsl(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+}
+function lighten(triplet: string, delta = 10) {
+  const parts = triplet.trim().split(/\s+/);
+  if (parts.length < 3) return hslCss(triplet);
+  const l = Math.min(95, parseFloat(parts[2]) + delta);
+  return `hsl(${parts[0]}, ${parts[1]}, ${l}%)`;
+}
+
 /* -------------------- Public scene -------------------- */
 export function ReelScene({
   scrollRef,
   onOpen,
+  videos,
+  accentHsl = "45 56% 51%",
 }: {
   scrollRef: React.MutableRefObject<number>;
   onOpen: (d: Device) => void;
+  videos: Device[];
+  accentHsl?: string;
 }) {
   const mouse = useRef({ x: 0, y: 0 });
   const era = useRef(0);
+  const accent = hslCss(accentHsl);
+  const lightAccent = lighten(accentHsl, 10);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -333,8 +352,8 @@ export function ReelScene({
     const devPts: { pos: [number, number, number]; restYaw: number; center: number }[] = [];
     pts.push(new THREE.Vector3(0, 0, 0));
 
-    const total = DEVICES.length + 2; // hero + outro
-    DEVICES.forEach((_, i) => {
+    const total = videos.length + 2;
+    videos.forEach((_, i) => {
       const z = -8 - i * 7;
       const x = Math.sin(i * 0.9) * 4.5 + (i % 2 === 0 ? -1 : 1) * 0.6;
       const y = Math.cos(i * 0.7) * 1.2;
@@ -346,13 +365,13 @@ export function ReelScene({
       devPts.push({ pos: [x, y, z], restYaw, center });
     });
 
-    pts.push(new THREE.Vector3(0, 6, -8 - DEVICES.length * 7 + 30));
-    pts.push(new THREE.Vector3(0, 10, -8 - DEVICES.length * 7 + 60));
+    pts.push(new THREE.Vector3(0, 6, -8 - videos.length * 7 + 30));
+    pts.push(new THREE.Vector3(0, 10, -8 - videos.length * 7 + 60));
 
     const c = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.5);
-    const segs = devPts.map((d, i) => ({ title: DEVICES[i].title, center: d.center }));
+    const segs = devPts.map((d, i) => ({ title: videos[i].title, center: d.center }));
     return { curve: c, devicePositions: devPts, segments: segs };
-  }, []);
+  }, [videos]);
 
   return (
     <Canvas
@@ -364,7 +383,7 @@ export function ReelScene({
       <Skybox era={era} />
       <ambientLight intensity={0.6} />
       <ScrollRig scroll={scrollRef} curve={curve} era={era} mouse={mouse} />
-      {DEVICES.map((d, i) => (
+      {videos.map((d, i) => (
         <DeviceCard
           key={d.id}
           device={d}
@@ -373,9 +392,11 @@ export function ReelScene({
           segmentCenter={devicePositions[i].center}
           scrollRef={scrollRef}
           onOpen={onOpen}
+          accent={accent}
+          lightAccent={lightAccent}
         />
       ))}
-      <ActiveTitleHUD scrollRef={scrollRef} segments={segments} />
+      <ActiveTitleHUD scrollRef={scrollRef} segments={segments} accent={accent} />
     </Canvas>
   );
 }
