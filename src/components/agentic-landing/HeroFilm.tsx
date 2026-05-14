@@ -11,11 +11,12 @@ export function HeroFilm() {
     >
       <video
         src="/video/hero-loop.mp4"
+        poster="/video/hero-loop.jpg"
         autoPlay
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         className="pointer-events-none fixed inset-0 -z-10 h-screen w-screen object-cover opacity-40 motion-reduce:hidden"
       />
       <div
