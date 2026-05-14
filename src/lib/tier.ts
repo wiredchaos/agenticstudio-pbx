@@ -3,6 +3,7 @@ import type { StudioFunnel } from "./studioTheme";
 export type StudioTier = "basic" | "premium";
 
 const BASIC_ALLOWED: (keyof StudioFunnel)[] = ["email_capture"];
+const PREMIUM_ONLY: (keyof StudioFunnel)[] = ["reel_3d"];
 
 export function hasFeature(
   studio: { tier?: string | null; funnel?: StudioFunnel | null } | null | undefined,
