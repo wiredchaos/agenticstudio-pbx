@@ -39,14 +39,27 @@ export default function AppLayout() {
       .then(({ data }) => setHoursSaved((data || []).reduce((s, r: any) => s + Number(r.hours_saved || 0), 0)));
   }, [studio]);
 
+  const theme = (studio as any)?.brand_theme || {};
+  const accent = theme.accent || "45 56% 51%";
+  const brandStyle = { ["--accent" as any]: `hsl(${accent})`, ["--gold" as any]: accent } as React.CSSProperties;
+
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-black text-white">
+      <div className="min-h-screen flex w-full bg-black text-white" style={brandStyle}>
         <Sidebar collapsible="icon" className="border-r border-white/10 [&>div]:bg-zinc-950">
           <SidebarContent className="bg-zinc-950">
-            <div className="p-4 border-b border-white/10">
-              <div className="font-bagel text-lg tracking-wider">AGENTIC</div>
-              <div className="text-xs text-white/40">{studio?.name || "Studio"}</div>
+            <div className="p-4 border-b border-white/10 flex items-center gap-3">
+              {theme.logo_url ? (
+                <img src={theme.logo_url} alt={studio?.name} className="h-7 w-auto" />
+              ) : (
+                <div className="font-bagel text-lg tracking-wider">AGENTIC</div>
+              )}
+              <div>
+                <div className="text-xs text-white/40">{studio?.name || "Studio"}</div>
+                {(studio as any)?.tier === "premium" && (
+                  <div className="text-[9px] tracking-[0.2em] uppercase" style={{ color: `hsl(${accent})` }}>Premium</div>
+                )}
+              </div>
             </div>
             {groups.map((g) => (
               <SidebarGroup key={g.label}>
