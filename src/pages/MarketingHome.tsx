@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Navbar } from "@/components/agentic-landing/Navbar";
 import { HeroFilm } from "@/components/agentic-landing/HeroFilm";
 import { ReelSection } from "@/components/agentic-landing/reel/ReelSection";
+import { DEVICES } from "@/components/agentic-landing/reel/devices";
 import { AgentsGrid } from "@/components/agentic-landing/AgentsGrid";
 import { HybridPrinciples } from "@/components/agentic-landing/HybridPrinciples";
 import { BrandFilm } from "@/components/agentic-landing/BrandFilm";
@@ -28,7 +29,14 @@ export default function MarketingHome() {
       <Navbar />
       <main>
         <HeroFilm />
-        <ReelSection />
+        <ReelSection
+          videos={DEVICES}
+          accentHsl="45 56% 51%"
+          eyebrow="Featured Filmmaker · MonkeY Teer · Devin Teer"
+          ctaPrimary={{ label: "Enter the Studio", href: "/auth" }}
+          ctaSecondary={{ label: "Get Early Access", href: "#early-access" }}
+          defaultMix="lofi"
+        />
         <AgentsGrid />
         <HybridPrinciples />
         <BrandFilm />
