@@ -298,7 +298,7 @@ function ActiveTitleHUD({
       <Text
         ref={textRef as any}
         fontSize={0.22}
-        color="#c9a53a"
+        color={accent}
         anchorX="center"
         anchorY="middle"
         letterSpacing={0.25}
