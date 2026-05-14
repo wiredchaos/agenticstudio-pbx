@@ -13,8 +13,31 @@ export function Footer() {
         <Link to="/studios" className="hover:text-foreground transition">Studios</Link>
         <Link to="/auth" className="hover:text-foreground transition">Sign In</Link>
       </nav>
-      <p className="text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        © {new Date().getFullYear()} Agentic Studios · Monkey Teer Studios
+      <p className="text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground leading-relaxed">
+        AGENTICstudio · a MonKeY Teer collaboration
+        <br />
+        powered by{" "}
+        <a
+          href="https://789studios.com"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-foreground transition"
+          style={{ color: "hsl(var(--gold))" }}
+        >
+          789 Studios
+        </a>{" "}
+        · engineered by{" "}
+        <a
+          href="https://neurometax.com"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-foreground transition"
+        >
+          neurometax.com
+        </a>
+      </p>
+      <p className="text-center text-[9px] uppercase tracking-[0.3em] text-muted-foreground/60">
+        © {new Date().getFullYear()}
       </p>
     </footer>
   );
