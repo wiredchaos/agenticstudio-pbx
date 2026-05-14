@@ -26,7 +26,7 @@ export function StudioStack() {
           Five departments. One pipeline. Each agent's output becomes the next agent's input — research feeds script, script feeds voice, voice feeds picture.
         </p>
 
-        <div className="mt-14 brand-sprocket-rail py-6">
+        <div className="mt-14">
           <div className="grid gap-4 md:grid-cols-5">
             {DEPTS.map((d, i) => (
               <div

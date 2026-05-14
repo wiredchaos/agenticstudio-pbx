@@ -723,3 +723,17 @@ html {
   .brand-shimmer, .brand-glow, .brand-drift { animation: none !important; }
   .brand-video-frame::after { transition: none; }
 }
+
+@keyframes pipeline-pulse {
+  0% { background-position: -50% 0; }
+  100% { background-position: 150% 0; }
+}
+.pipeline-pulse {
+  background-image: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.7), transparent);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: pipeline-pulse 6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pipeline-pulse { animation: none; background-image: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.4), transparent); }
+}
