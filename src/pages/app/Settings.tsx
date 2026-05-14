@@ -33,6 +33,8 @@ export default function Settings() {
         <h1 className="font-bagel text-4xl">Studio configuration.</h1>
       </div>
 
+      {studio && <BrandSettings studio={studio} />}
+
       <div className="glass-effect rounded-xl p-6 space-y-5">
         <h2 className="text-sm tracking-[0.3em] uppercase text-white/40">Infrastructure mode</h2>
         <div className="flex gap-3">
