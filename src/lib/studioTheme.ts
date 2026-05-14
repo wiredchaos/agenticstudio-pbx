@@ -40,6 +40,7 @@ export const DEFAULT_THEME: Required<Omit<BrandTheme, "hero_media_url">> & { her
   hero_media_url: null,
   hero_media_kind: "image",
   hero_poster_url: null,
+  audio_mix: "lofi",
 };
 
 export function mergeTheme(t?: BrandTheme | null) {
