@@ -111,6 +111,22 @@ export function BrandSettings({ studio, onSaved }: { studio: any; onSaved?: () =
         <Toggle label="Pricing / CTA block" checked={!!funnel.pricing_block} onChange={(v) => setF("pricing_block", v)} />
         <Toggle label="Testimonials" checked={!!funnel.testimonials} onChange={(v) => setF("testimonials", v)} />
         <Toggle label="Custom-domain CTA" checked={!!funnel.custom_domain_cta} onChange={(v) => setF("custom_domain_cta", v)} />
+        <Toggle label="3D scroll reel (immersive)" checked={!!funnel.reel_3d} onChange={(v) => setF("reel_3d", v)} />
+      </div>
+
+      <div className="border-t border-white/10 pt-5 space-y-4">
+        <h3 className="text-xs uppercase tracking-widest text-white/50">3D Reel · YouTube videos</h3>
+        <p className="text-xs text-white/40">Up to 10 entries. Each becomes a floating device in your scroll-driven 3D reel.</p>
+        <ReelVideosEditor
+          videos={(funnel.reel_videos as any) || []}
+          onChange={(v) => setF("reel_videos", v as any)}
+        />
+        <SelectField
+          label="Default audio mix"
+          value={theme.audio_mix || "lofi"}
+          onChange={(v: string) => set("audio_mix", v as any)}
+          options={["lofi", "edm", "world", "samba", "afrobass"]}
+        />
       </div>
 
       <div className="border-t border-white/10 pt-5">
