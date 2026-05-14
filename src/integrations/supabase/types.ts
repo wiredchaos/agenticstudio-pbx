@@ -19,6 +19,7 @@ export type Database = {
           agent_slug: string
           awaiting_approval: boolean
           created_at: string
+          department: string | null
           hours_saved: number
           id: string
           input: Json
@@ -33,6 +34,7 @@ export type Database = {
           agent_slug: string
           awaiting_approval?: boolean
           created_at?: string
+          department?: string | null
           hours_saved?: number
           id?: string
           input?: Json
@@ -47,6 +49,7 @@ export type Database = {
           agent_slug?: string
           awaiting_approval?: boolean
           created_at?: string
+          department?: string | null
           hours_saved?: number
           id?: string
           input?: Json
