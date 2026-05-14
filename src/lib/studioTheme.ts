@@ -9,6 +9,7 @@ export type BrandTheme = {
   wordmark_url?: string;
   hero_media_url?: string | null;
   hero_media_kind?: "image" | "video";
+  hero_poster_url?: string | null;
 };
 
 export type StudioFunnel = {
@@ -31,6 +32,7 @@ export const DEFAULT_THEME: Required<Omit<BrandTheme, "hero_media_url">> & { her
   wordmark_url: "/brand/agentic-wordmark.png",
   hero_media_url: null,
   hero_media_kind: "image",
+  hero_poster_url: null,
 };
 
 export function mergeTheme(t?: BrandTheme | null) {
