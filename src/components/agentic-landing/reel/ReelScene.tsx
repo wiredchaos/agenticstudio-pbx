@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
-import { DEVICES, thumb, type Device } from "./devices";
+import { thumb, type Device } from "./devices";
 
 /* -------------------- Procedural panorama skybox -------------------- */
 const PANORAMA_FRAG = /* glsl */ `
